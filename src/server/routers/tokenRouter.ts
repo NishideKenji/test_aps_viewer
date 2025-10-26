@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { PermitedRoleListAdmin } from '@/global_constants'
-import { refreshAccessToken } from '@/utils/auth'
+import { refreshAccessToken } from '@/utils/aps/auth'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
 import { procedure, router } from '../trpc'
