@@ -4,6 +4,7 @@ import { registerRouter } from './registerRouter'
 import { roleRouter } from './roleRouter'
 import { taskRouter } from './taskRouter'
 import { tokenRouter } from './tokenRouter'
+import { userRouter } from './userRouter'
 
 /**
  * This is the primary router for your server.
@@ -16,6 +17,7 @@ export const appRouter = router({
   taskRouter,
   tokenRouter,
   roleRouter,
+  userRouter,
 })
 
 // export type definition of API
