@@ -9,12 +9,14 @@ export type ApsTokenResponse = {
 
 export async function refreshAccessToken(
   refreshToken: string,
+  client_id: string,
+  client_secret: string,
 ): Promise<ApsTokenResponse> {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refreshToken,
-    client_id: process.env.APS_CLIENT_ID!,
-    client_secret: process.env.APS_CLIENT_SECRET!,
+    client_id: client_id,
+    client_secret: client_secret,
   })
 
   const r = await fetch(

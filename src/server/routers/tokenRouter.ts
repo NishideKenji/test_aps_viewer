@@ -13,7 +13,17 @@ export const tokenRouter = router({
       const { token: refreshToken } = (await opt.ctx.prisma.token.findFirst({
         where: { type: 'APS_REFRESH_TOKEN' },
       })) || { refreshToken: '' }
-      const token = await refreshAccessToken(refreshToken || '')
+      const { token: client_id } = (await opt.ctx.prisma.token.findFirst({
+        where: { type: 'APS_CLIENT_ID' },
+      })) || { client_id: '' }
+      const { token: client_secret } = (await opt.ctx.prisma.token.findFirst({
+        where: { type: 'APS_CLIENT_SECRET' },
+      })) || { client_secret: '' }
+      const token = await refreshAccessToken(
+        refreshToken || '',
+        client_id || '',
+        client_secret || '',
+      )
 
       //      console.log('Upserting token:', token)
 
