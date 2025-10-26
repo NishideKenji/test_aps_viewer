@@ -1,10 +1,9 @@
-import {  Button,  Grid,  Paper,  Typography,} from '@mui/material'
+import { Button, Grid, Paper, Typography } from '@mui/material'
 //import dayjs from 'dayjs'
 import { useSnackbar } from 'notistack'
 import { type FC, useState } from 'react'
 
 //import theme from '@/theme'
-
 
 export type ControlPanelForUpdateTokenManuallyProps = {
   onUpdateToken: () => Promise<void>
@@ -17,54 +16,44 @@ export type ControlPanelForUpdateTokenManuallyProps = {
  */
 export const ControlPanelForUpdateTokenManually: FC<
   ControlPanelForUpdateTokenManuallyProps
-> = ({
-  onUpdateToken,
-}) => {
+> = ({ onUpdateToken }) => {
   const { enqueueSnackbar } = useSnackbar()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-
   return (
     <>
       <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={4}>
+        <Paper variant="outlined" sx={{ p: 2, background: 'light' }}>
+          <Typography component="h4" variant="h6">
+            トークン更新
+          </Typography>
 
-          <Paper variant="outlined" sx={{ p: 2, background: 'light' }}>
-            <Typography component="h4" variant="h6">
-              トークン更新
-            </Typography>
-
-            <Button
-              disabled={isSubmitting}
-              type="submit"
-              variant="contained"
-              color="primary"
-              onClick={async () => {
-                setIsSubmitting(true)
-                try {
-                  await onUpdateToken()
-                  enqueueSnackbar('トークンを更新しました', {
-                    variant: 'success',
-                  })
-                } catch (err) {
-                  console.error(err)
-                  enqueueSnackbar('システムエラーが発生しました', {
-                    variant: 'error',
-                  })
-                } finally {
-                  setIsSubmitting(false)
-                }
-              }}
-            >
-              {isSubmitting ? 'Processing' : 'Run Batch'}
-            </Button>
-          </Paper>
-
-
-        </Grid>
-
-
+          <Button
+            disabled={isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            onClick={async () => {
+              setIsSubmitting(true)
+              try {
+                await onUpdateToken()
+                enqueueSnackbar('トークンを更新しました', {
+                  variant: 'success',
+                })
+              } catch (err) {
+                console.error(err)
+                enqueueSnackbar('システムエラーが発生しました', {
+                  variant: 'error',
+                })
+              } finally {
+                setIsSubmitting(false)
+              }
+            }}
+          >
+            {isSubmitting ? 'Processing' : 'Run Batch'}
+          </Button>
+        </Paper>
       </Grid>
     </>
   )
