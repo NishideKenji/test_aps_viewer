@@ -7,10 +7,12 @@ import {
   Typography,
 } from '@mui/material'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { useState } from 'react'
 
 export default function NavBar() {
+  const router = useRouter()
   const { data: session } = useSession()
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -54,7 +56,8 @@ export default function NavBar() {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => signOut()}>SignOut</MenuItem>
+              <MenuItem onClick={() => router.push('/admin')}>管理</MenuItem>
+              <MenuItem onClick={() => signOut()}>ログアウト</MenuItem>
             </Menu>
           </>
         )}

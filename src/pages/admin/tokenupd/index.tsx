@@ -4,7 +4,7 @@ import React from 'react'
 import { ControlPanelForUpdateTokenManually } from '@/components/admin/tokenupd'
 import { trpc } from '@/utils/trpc'
 
-export default function AdminTokenUpd() {
+export default function TokenUpd() {
   const onUpdateToken = trpc.tokenRouter.updateToken.useMutation().mutateAsync
 
   return (

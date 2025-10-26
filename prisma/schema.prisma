@@ -44,8 +44,19 @@ model User {
   emailVerified    DateTime?
   crypted_password String?
   image            String?
+  role             Role?     @relation(fields: [roleId], references: [id])
+  roleId           String?
   accounts         Account[]
   sessions         Session[]
+}
+
+// 権限ロールテーブル(デフォルトから追加)
+model Role {
+  id    String @id @default(cuid()) @map("_id")
+  name  String @unique
+  users User[]
+
+  @@map("roles")
 }
 
 model Task {
