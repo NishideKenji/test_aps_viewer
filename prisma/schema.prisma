@@ -56,3 +56,11 @@ model Task {
   end_date_scheduled DateTime?
   end_date_actual    DateTime?
 }
+
+model Token {
+  id        String   @id @default(cuid()) @map("_id") // ID
+  type      String   @unique
+  token     String?
+  createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
+}

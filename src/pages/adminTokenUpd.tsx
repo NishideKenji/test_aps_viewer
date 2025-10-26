@@ -1,0 +1,17 @@
+import { Box, Container } from '@mui/material'
+import React from 'react'
+
+import { ControlPanelForUpdateTokenManually } from '@/components/admin/tokenupd'
+import { trpc } from '@/utils/trpc'
+
+export default function AdminTokenUpd() {
+  const onUpdateToken = trpc.tokenRouter.updateToken.useMutation().mutateAsync
+
+  return (
+    <Container maxWidth="xs">
+      <Box>
+        <ControlPanelForUpdateTokenManually onUpdateToken={onUpdateToken} />
+      </Box>
+    </Container>
+  )
+}
