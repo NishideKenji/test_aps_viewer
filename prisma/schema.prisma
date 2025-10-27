@@ -75,3 +75,19 @@ model Token {
   createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
   updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
 }
+
+model Hub {
+  id        String   @id @default(cuid()) @map("_id") // ID
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
+}
+
+model Project {
+  id        String   @id @default(cuid()) @map("_id") // ID
+  name      String // Projectの名前
+  hubId     String   @map("hub_id") // HubのID
+  hubName   String   @map("hub_name") // Hubの名前
+  createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
+}

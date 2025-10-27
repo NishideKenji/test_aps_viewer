@@ -1,4 +1,5 @@
 import { router } from '../trpc'
+import { apsRouter } from './apsRouter'
 import { helloRouter } from './helloRouter'
 import { registerRouter } from './registerRouter'
 import { roleRouter } from './roleRouter'
@@ -18,6 +19,7 @@ export const appRouter = router({
   tokenRouter,
   roleRouter,
   userRouter,
+  apsRouter,
 })
 
 // export type definition of API
