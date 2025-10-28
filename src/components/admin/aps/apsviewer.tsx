@@ -16,9 +16,24 @@ type Props = {
 const VIEWABLE_TYPES = new Set<string>([
   'items:autodesk.fusion:Design',
   'items:autodesk.fusion:Drawing',
+  // 追加（←スクショのケース）
+  'items:autodesk.fusion360:Design',
+  'items:autodesk.fusion360:Drawing',
+
   'versions:autodesk.fusion360:Design',
   'versions:autodesk.fusion360:Drawing',
 ])
+
+async function waitForViewerGlobal(timeoutMs = 10000, intervalMs = 50) {
+  const start = Date.now()
+  while (Date.now() - start < timeoutMs) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const A = (window as any).Autodesk
+    if (A?.Viewing) return A
+    await new Promise((r) => setTimeout(r, intervalMs))
+  }
+  throw new Error('Viewer runtime not available (window.Autodesk.Viewing)')
+}
 
 /** 人向けに整形した「種別名」を返す */
 function describeItemKind(extType?: string): string {
@@ -177,11 +192,14 @@ export default function AutodeskFusionViewer({
         await ensureViewerAssets()
         if (disposed) return
 
+        // （ここを追加）
+        const AutodeskNS = await waitForViewerGlobal().catch((e) => {
+          throw e
+        })
+
         // 4) Viewer初期化
         onStatusChange?.('loading')
-        const AutodeskNS = (window as any).Autodesk
         const options = { env: 'AutodeskProduction', accessToken } as any
-
         AutodeskNS.Viewing.Initializer(options, () => {
           if (disposed) return
           const div = containerRef.current

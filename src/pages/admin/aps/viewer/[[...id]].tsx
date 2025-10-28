@@ -30,17 +30,8 @@ export default function ApsViewer() {
                 accessToken={accessToken || ''}
                 projectId={content ? content.projectId : ''}
                 itemId={content ? content.id : ''}
-                style={{ height: '100%' }}
-                onStatusChange={(s, info) => console.log('viewer:', s, info)}
               />
             )}
-            {/*
-            <>
-              <div>{content?.name}</div>
-              <div>{content?.id}</div>
-              <div>{content?.projectId}</div>
-              <div>{accessToken}</div>
-            </>*/}
           </Grid>
         </Box>
       </Container>
