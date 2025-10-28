@@ -3,7 +3,7 @@ export type FirstLevelEntry = {
   id: string
   name: string
   kind: 'folder' | 'item'
-  parentTopId: string
+  parentId: string
 }
 
 /**
@@ -57,7 +57,7 @@ export async function getFolderContentsOnce(
         id: e.id,
         name: e.attributes?.name ?? 'Folder',
         kind: 'folder' as const,
-        parentTopId: folderId,
+        parentId: folderId,
       }
     }
     // items（ファイル）
@@ -65,7 +65,7 @@ export async function getFolderContentsOnce(
       id: e.id,
       name: e.attributes?.displayName ?? 'Item',
       kind: 'item' as const,
-      parentTopId: folderId,
+      parentId: folderId,
     }
   })
 }

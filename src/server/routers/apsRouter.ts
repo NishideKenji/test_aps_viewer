@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { PermitedRoleListAdmin } from '@/global_constants'
-import { getProjectFirstLevel } from '@/utils/aps/apsfiles'
+import { getProjectFirstLevel } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
@@ -100,8 +100,26 @@ export const apsRouter = router({
             project.hubId,
             project.id,
           )
+          for (const entry of firstLevelEntries) {
+            await opt.ctx.prisma.apsContent.upsert({
+              where: { id: entry.id },
+              update: {
+                projectId: project.id,
+                parentId: entry.parentId,
+                name: entry.name,
+                kind: entry.kind,
+              },
+              create: {
+                id: entry.id,
+                name: entry.name,
+                kind: entry.kind,
+                parentId: entry.parentId,
+                projectId: project.id,
+              },
+            })
+          }
 
-          console.log(firstLevelEntries)
+          //console.log(firstLevelEntries)
         }
         /*
         const hubsList = await getHubsList(access_token || '')

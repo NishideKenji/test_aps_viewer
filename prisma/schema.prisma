@@ -91,3 +91,15 @@ model Project {
   createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
   updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
 }
+
+model apsContent {
+  id        String   @id @default(cuid()) @map("_id") // ID
+  projectId String   @map("project_id") // ProjectのID
+  parentId  String   @map("parent_id") // 親アイテムのID
+  name      String // アイテムの名前
+  kind      String // アイテムのタイプ
+  createdAt DateTime @default(now()) @map("created_at") // 作成日時(UTC)
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新日時(UTC)
+
+  @@map("aps_contents")
+}
