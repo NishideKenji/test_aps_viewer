@@ -1,0 +1,49 @@
+import { Box, Container, Grid } from '@mui/material'
+import { useRouter } from 'next/router'
+import { useSession } from 'next-auth/react'
+import React from 'react'
+
+import AutodeskFusionViewer from '@/components/admin/aps/apsviewer'
+import { trpc } from '@/utils/trpc'
+
+export default function ApsViewer() {
+  const { data: session } = useSession()
+
+  const router = useRouter()
+  const { id } = router.query
+
+  const { data: content } = trpc.apsRouter.getContent.useQuery({
+    id: id ? id.toString() : '',
+  })
+
+  const accessToken = trpc.apsRouter.getToken.useQuery({
+    type: 'APS_ACCESS_TOKEN',
+  }).data
+
+  return (
+    session && (
+      <Container maxWidth={false} sx={{ py: 2 }}>
+        <Box component={'div'} p={10}>
+          <Grid container spacing={10}>
+            {accessToken && content && (
+              <AutodeskFusionViewer
+                accessToken={accessToken || ''}
+                projectId={content ? content.projectId : ''}
+                itemId={content ? content.id : ''}
+                style={{ height: '100%' }}
+                onStatusChange={(s, info) => console.log('viewer:', s, info)}
+              />
+            )}
+            {/*
+            <>
+              <div>{content?.name}</div>
+              <div>{content?.id}</div>
+              <div>{content?.projectId}</div>
+              <div>{accessToken}</div>
+            </>*/}
+          </Grid>
+        </Box>
+      </Container>
+    )
+  )
+}

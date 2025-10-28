@@ -156,6 +156,38 @@ export const apsRouter = router({
     }
   }),
 
+  getContentList: procedure.query(async (opt) => {
+    if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+      const contents = await opt.ctx.prisma.apsContent.findMany({
+        select: {
+          id: true,
+          projectId: true,
+          parentId: true,
+          name: true,
+          kind: true,
+          updatedAt: true,
+        },
+        orderBy: [{ projectId: 'asc' }, { name: 'asc' }],
+      })
+      return contents
+    }
+  }),
+
+  getContent: procedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const content = await opt.ctx.prisma.apsContent.findUnique({
+          where: { id: opt.input.id },
+        })
+        return content
+      }
+    }),
+
   getToken: procedure
     .input(
       z.object({

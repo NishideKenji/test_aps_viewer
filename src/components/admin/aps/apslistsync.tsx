@@ -4,6 +4,7 @@ import { type FC, useState } from 'react'
 
 import { trpc } from '@/utils/trpc'
 
+import { ApsContentList } from './apsContentList'
 import AutodeskFusionViewer from './apsviewer'
 import { ProjectList } from './projectlist'
 
@@ -129,6 +130,7 @@ export const ControlPanelForApsListSyncManually: FC<
           </Button>
         </Paper>
         {projectlist && <ProjectList projects={projectlist} />}
+        <ApsContentList />
         {accessToken && projectlist && projectlist.length > 0 && (
           <AutodeskFusionViewer
             accessToken={accessToken}
