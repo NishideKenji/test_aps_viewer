@@ -1,4 +1,7 @@
+import { z } from 'zod'
+
 import { PermitedRoleListAdmin } from '@/global_constants'
+import { getProjectFirstLevel } from '@/utils/aps/apsfiles'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
@@ -81,4 +84,72 @@ export const apsRouter = router({
       }
     }
   }),
+
+  updateFiles: procedure.mutation(async (opt) => {
+    if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+      try {
+        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
+          where: { type: 'APS_ACCESS_TOKEN' },
+        })) || { token: '' }
+
+        const projects = await opt.ctx.prisma.project.findMany()
+
+        for (const project of projects) {
+          const firstLevelEntries = await getProjectFirstLevel(
+            access_token || '',
+            project.hubId,
+            project.id,
+          )
+
+          console.log(firstLevelEntries)
+        }
+        /*
+        const hubsList = await getHubsList(access_token || '')
+        for (const hub of hubsList) {
+          await opt.ctx.prisma.hub.upsert({
+            where: { id: hub.id },
+            update: { name: hub.name },
+            create: {
+              id: hub.id,
+              name: hub.name,
+            },
+          })
+        }*/
+        //console.log(hubsList)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+  }),
+
+  projectlist: procedure.query(async (opt) => {
+    if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+      const projects = await opt.ctx.prisma.project.findMany({
+        select: {
+          id: true,
+          name: true,
+          hubId: true,
+          hubName: true,
+          updatedAt: true,
+        },
+        orderBy: [{ hubName: 'asc' }, { name: 'asc' }],
+      })
+      return projects
+    }
+  }),
+
+  getToken: procedure
+    .input(
+      z.object({
+        type: z.string(),
+      }),
+    )
+    .query(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const tokenEntry = await opt.ctx.prisma.token.findFirst({
+          where: { type: opt.input.type },
+        })
+        return tokenEntry?.token || null
+      }
+    }),
 })
