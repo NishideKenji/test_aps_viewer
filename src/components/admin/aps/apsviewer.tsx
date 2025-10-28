@@ -2,11 +2,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 type Props = {
-  /** DBから取得したAPS Access Token（60分想定） */
   accessToken: string
-  /** APS projectId（a.Yn...） */
   projectId: string
-  /** APS itemId（urn:adsk.wipprod:dm.lineage:...） */
   itemId: string
   style?: React.CSSProperties
   onStatusChange?: (
@@ -15,10 +12,25 @@ type Props = {
   ) => void
 }
 
-/**
- * Fusion 3D/2D（Design/Drawing）のみViewer表示。
- * 必須propsが欠ける/対象外のときは何も描画しない（null）。
- */
+/** Viewerで直接表示許可する拡張タイプ（items/versions 両方を許容） */
+const VIEWABLE_TYPES = new Set<string>([
+  'items:autodesk.fusion:Design',
+  'items:autodesk.fusion:Drawing',
+  'versions:autodesk.fusion360:Design',
+  'versions:autodesk.fusion360:Drawing',
+])
+
+/** 人向けに整形した「種別名」を返す */
+function describeItemKind(extType?: string): string {
+  if (!extType) return 'Unknown'
+  if (extType.endsWith(':Design')) return 'Fusion Design（設計モデル）'
+  if (extType.endsWith(':Drawing')) return 'Fusion Drawing（図面）'
+  // 代表的なその他（用途に応じて追加してください）
+  if (/fusionarchive/i.test(extType)) return 'Fusion Archive（アーカイブ）'
+  if (/File/i.test(extType)) return 'ファイル（汎用）'
+  return extType
+}
+
 export default function AutodeskFusionViewer({
   accessToken,
   projectId,
@@ -28,14 +40,25 @@ export default function AutodeskFusionViewer({
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const viewerRef = useRef<any>(null)
-  const [shouldShow, setShouldShow] = useState(false)
+
+  const [canView, setCanView] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 不足時は非表示
+  // 情報パネル用の詳細
+  const [extType, setExtType] = useState<string | undefined>(undefined)
+  const [itemKind, setItemKind] = useState<string>('Unknown')
+  const [reason, setReason] = useState<string | null>(null)
+  const [derivativesUrn, setDerivativesUrn] = useState<string | null>(null)
+
+  // 不足時の初期化
   useEffect(() => {
     if (!accessToken || !projectId || !itemId) {
-      setShouldShow(false)
+      setCanView(false)
       setError(null)
+      setExtType(undefined)
+      setItemKind('Unknown')
+      setReason('必須パラメータ不足（accessToken / projectId / itemId）')
+      setDerivativesUrn(null)
       onStatusChange?.('hidden', 'missing props')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -49,8 +72,52 @@ export default function AutodeskFusionViewer({
     async function run() {
       try {
         onStatusChange?.('checking')
+        setError(null)
+        setReason(null)
+        setExtType(undefined)
+        setItemKind('Unknown')
+        setDerivativesUrn(null)
+        setCanView(false)
 
-        // 1) 最新バージョン取得 → Fusion 3D/2D 判定
+        // 0) itemId が dm.lineage でなければ対象外
+        const isLineage =
+          typeof itemId === 'string' &&
+          /^urn:adsk\.wipprod:dm\.lineage:/.test(itemId)
+        if (!isLineage) {
+          const r = 'itemId が dm.lineage 形式ではありません'
+          setReason(r)
+          onStatusChange?.('hidden', r)
+          return
+        }
+
+        // 1) items で種別チェック（Design / Drawing のみ許可）
+        let ok = false
+        let itemType: string | undefined
+
+        try {
+          const itemRes = await fetch(
+            `https://developer.api.autodesk.com/data/v1/projects/${encodeURIComponent(
+              projectId,
+            )}/items/${encodeURIComponent(itemId)}`,
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              cache: 'no-store',
+            },
+          )
+          if (itemRes.ok) {
+            const itemJson = await itemRes.json()
+            itemType = itemJson?.data?.attributes?.extension?.type
+            if (itemType) {
+              setExtType(itemType)
+              setItemKind(describeItemKind(itemType))
+              ok = VIEWABLE_TYPES.has(itemType)
+            }
+          }
+        } catch {
+          // noop（後段で versions による判定フォールバックあり）
+        }
+
+        // 2) 最新バージョン取得（URN 取得 & 予備の型チェック）
         const verRes = await fetch(
           `https://developer.api.autodesk.com/data/v1/projects/${encodeURIComponent(
             projectId,
@@ -67,48 +134,59 @@ export default function AutodeskFusionViewer({
         const verJson = await verRes.json()
         const latest = verJson?.data?.[0]
         if (!latest) {
-          setShouldShow(false)
-          onStatusChange?.('hidden', 'no versions')
+          const r = 'このアイテムにはバージョンがありません'
+          setReason(r)
+          onStatusChange?.('hidden', r)
           return
         }
 
-        const extType = latest?.attributes?.extension?.type as
-          | string
-          | undefined
+        // items で判定できなかった場合、versions の型名でも許可
+        if (!ok) {
+          const extTypeV = latest?.attributes?.extension?.type as
+            | string
+            | undefined
+          if (extTypeV) {
+            setExtType((prev) => prev ?? extTypeV)
+            setItemKind(describeItemKind(extTypeV))
+            ok = VIEWABLE_TYPES.has(extTypeV)
+          }
+        }
+
         const derivativesId = latest?.relationships?.derivatives?.data?.id as
           | string
           | undefined
-
-        const isFusion3D = extType === 'items:autodesk.fusion:Design'
-        const isFusion2D = extType === 'items:autodesk.fusion:Drawing'
-
-        if (!isFusion3D && !isFusion2D) {
-          setShouldShow(false)
-          onStatusChange?.('hidden', { extType })
-          return
-        }
         if (!derivativesId) {
-          setShouldShow(false)
-          onStatusChange?.('hidden', 'no derivatives urn')
+          const r = '派生データ（derivatives URN）がありません'
+          setReason(r)
+          onStatusChange?.('hidden', r)
+          return
+        }
+        setDerivativesUrn(derivativesId)
+
+        if (!ok) {
+          const r = 'この種別はビューア未対応です'
+          setReason(r)
+          onStatusChange?.('hidden', {
+            extType: itemType ?? latest?.attributes?.extension?.type,
+            reason: r,
+          })
           return
         }
 
-        // 2) Viewer資産ロード（重複回避）
+        // 3) Viewer資産ロード（重複回避）
         await ensureViewerAssets()
         if (disposed) return
 
-        // 3) Viewer初期化
+        // 4) Viewer初期化
         onStatusChange?.('loading')
         const AutodeskNS = (window as any).Autodesk
         const options = { env: 'AutodeskProduction', accessToken } as any
 
         AutodeskNS.Viewing.Initializer(options, () => {
           if (disposed) return
-
           const div = containerRef.current
           if (!div) return
 
-          // 既存のviewerを破棄（再マウント対策）
           if (viewerRef.current) {
             try {
               viewerRef.current.finish()
@@ -129,20 +207,26 @@ export default function AutodeskFusionViewer({
               if (disposed) return
               const defaultModel = doc.getRoot().getDefaultGeometry()
               viewer.loadDocumentNode(doc, defaultModel)
-              setShouldShow(true)
-              onStatusChange?.('shown', { extType })
+              setCanView(true)
+              onStatusChange?.('shown', {
+                extType: itemType ?? latest?.attributes?.extension?.type,
+              })
             },
             (e: any) => {
-              setError(`Document.load error: ${JSON.stringify(e)}`)
-              setShouldShow(false)
+              const msg = `Document.load error: ${JSON.stringify(e)}`
+              setError(msg)
+              setCanView(false)
+              setReason('ドキュメントのロードに失敗しました')
               onStatusChange?.('error', e)
             },
           )
         })
       } catch (e: any) {
         if (disposed) return
-        setError(e.message || String(e))
-        setShouldShow(false)
+        const msg = e?.message || String(e)
+        setError(msg)
+        setCanView(false)
+        setReason('処理中にエラーが発生しました')
         onStatusChange?.('error', e)
       }
     }
@@ -159,25 +243,104 @@ export default function AutodeskFusionViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken, projectId, itemId])
 
-  if (!accessToken || !projectId || !itemId) return null
-  if (!shouldShow) return null
+  // レイアウト：上部にViewer（可視化できる場合）、下部に情報パネル（常時）
+  // 必須propsが欠けるときもパネルで理由は出す
+  const wrapperStyle: React.CSSProperties = {
+    width: '100%',
+    ...style,
+  }
+
+  const panelStyle: React.CSSProperties = {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    border: '1px solid #e0e0e0',
+    background: '#fafafa',
+    fontSize: 14,
+    lineHeight: 1.6,
+    wordBreak: 'break-all',
+  }
+
+  const label: React.CSSProperties = {
+    display: 'inline-block',
+    minWidth: 140,
+    color: '#555',
+    fontWeight: 600,
+  }
 
   return (
-    <>
-      {/* viewer3D.js / style は ensureViewerAssets() が動的に読む */}
-      <div
-        ref={containerRef}
-        style={{ width: '100%', height: '100%', minHeight: '60vh', ...style }}
-      />
-      {error ? <span style={{ color: 'red' }}>{error}</span> : null}
-    </>
+    <div style={wrapperStyle}>
+      {/* Viewer領域（可視化可能時のみ表示） */}
+      {canView ? (
+        <div
+          ref={containerRef}
+          style={{
+            width: '100%',
+            height: '60vh',
+            minHeight: 360,
+            borderRadius: 8,
+            overflow: 'hidden',
+            border: '1px solid #e0e0e0',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: 180,
+            minHeight: 180,
+            borderRadius: 8,
+            border: '1px dashed #c7c7c7',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#777',
+            background: '#fcfcfc',
+          }}
+        >
+          ビューアは表示されていません（下の情報をご確認ください）
+        </div>
+      )}
+
+      {/* 情報パネル（常時） */}
+      <div style={panelStyle}>
+        <div>
+          <span style={label}>itemId</span>
+          {itemId || '(未指定)'}
+        </div>
+        <div>
+          <span style={label}>拡張タイプ</span>
+          {extType ?? '(取得中/不明)'}
+        </div>
+        <div>
+          <span style={label}>種別（人向け）</span>
+          {itemKind}
+        </div>
+        <div>
+          <span style={label}>表示可否</span>
+          {canView ? '表示可能（Viewerにロード済み）' : '表示不可'}
+        </div>
+        <div>
+          <span style={label}>理由</span>
+          {reason ?? '（特になし）'}
+        </div>
+        <div>
+          <span style={label}>Derivatives URN</span>
+          {derivativesUrn ?? '(未取得)'}
+        </div>
+        {error ? (
+          <div style={{ marginTop: 8, color: '#b71c1c' }}>
+            <strong>エラー:</strong> {error}
+          </div>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
 async function ensureViewerAssets() {
   const w = window as any
   if (w.Autodesk?.Viewing) return
-
   await Promise.all([
     loadScript(
       'https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js',
@@ -204,6 +367,7 @@ function loadScript(src: string) {
 function loadStyle(href: string) {
   return new Promise<void>((resolve, reject) => {
     const exists = Array.from(document.styleSheets).some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (s: any) => s?.href === href,
     )
     if (exists) return resolve()
