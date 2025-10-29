@@ -25,8 +25,13 @@ const Admin = () => {
         <Box component={'div'}>
           <ul>
             <li>
+              <Button variant="text" href="/admin/apsitems">
+                APS Item 一覧
+              </Button>
+            </li>
+            <li>
               <Button variant="text" href="/admin/aps">
-                APS管理
+                APS更新
               </Button>
             </li>
             <li>

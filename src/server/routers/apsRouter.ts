@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { PermitedRoleListAdmin } from '@/global_constants'
 import { getProjectFirstLevel } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
+import { getViewerInfo } from '@/utils/aps/getViewerInfo'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
 import { procedure, router } from '../trpc'
@@ -101,22 +102,55 @@ export const apsRouter = router({
             project.id,
           )
           for (const entry of firstLevelEntries) {
-            await opt.ctx.prisma.apsContent.upsert({
-              where: { id: entry.id },
-              update: {
-                projectId: project.id,
-                parentId: entry.parentId,
-                name: entry.name,
-                kind: entry.kind,
-              },
-              create: {
-                id: entry.id,
-                name: entry.name,
-                kind: entry.kind,
-                parentId: entry.parentId,
-                projectId: project.id,
-              },
-            })
+            if (access_token && entry.kind === 'item') {
+              const itemInfo = await getViewerInfo(
+                access_token,
+                project.id,
+                entry.id,
+              )
+              console.log(itemInfo)
+              await opt.ctx.prisma.apsContent.upsert({
+                where: { id: entry.id },
+                update: {
+                  projectId: project.id,
+                  parentId: entry.parentId,
+                  name: entry.name,
+                  kind: entry.kind,
+                  versionId: itemInfo.versionId,
+                  urn: itemInfo.urn,
+                  dataType: itemInfo.dataType,
+                  translated: itemInfo.translated,
+                },
+                create: {
+                  id: entry.id,
+                  name: entry.name,
+                  kind: entry.kind,
+                  parentId: entry.parentId,
+                  projectId: project.id,
+                  versionId: itemInfo.versionId,
+                  urn: itemInfo.urn,
+                  dataType: itemInfo.dataType,
+                  translated: itemInfo.translated,
+                },
+              })
+            } else {
+              await opt.ctx.prisma.apsContent.upsert({
+                where: { id: entry.id },
+                update: {
+                  projectId: project.id,
+                  parentId: entry.parentId,
+                  name: entry.name,
+                  kind: entry.kind,
+                },
+                create: {
+                  id: entry.id,
+                  name: entry.name,
+                  kind: entry.kind,
+                  parentId: entry.parentId,
+                  projectId: project.id,
+                },
+              })
+            }
           }
 
           //console.log(firstLevelEntries)
@@ -165,6 +199,9 @@ export const apsRouter = router({
           parentId: true,
           name: true,
           kind: true,
+          dataType: true,
+          translated: true,
+          urn: true,
           updatedAt: true,
         },
         orderBy: [{ projectId: 'asc' }, { name: 'asc' }],

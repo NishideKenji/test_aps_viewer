@@ -12,8 +12,10 @@ export const ApsContentList = () => {
       <TableHead>
         <TableRow>
           <TableCell>No</TableCell>
-          <TableCell>Hub</TableCell>
-          <TableCell>Project</TableCell>
+          <TableCell>Type</TableCell>
+          <TableCell>Name</TableCell>
+          <TableCell>Data Type</TableCell>
+          <TableCell>Translated</TableCell>
           <TableCell>Updated</TableCell>
         </TableRow>
       </TableHead>
@@ -24,11 +26,18 @@ export const ApsContentList = () => {
             return (
               <TableRow key={index}>
                 <TableCell>
-                  <Link href={`/admin/aps/viewer/${content.id}`}>
-                    {index + 1}
-                  </Link>
+                  {content.urn ? (
+                    <Link href={`/admin/aps/viewer/${content.urn}`}>
+                      {index + 1}
+                    </Link>
+                  ) : (
+                    index + 1
+                  )}
                 </TableCell>
+                <TableCell>{content.kind}</TableCell>
                 <TableCell>{content.name}</TableCell>
+                <TableCell>{content.dataType}</TableCell>
+                <TableCell>{content.translated ? 'Yes' : 'No'}</TableCell>
                 <TableCell>
                   {dayjs(content.updatedAt).format('YYYY/MM/DD HH:mm')}
                 </TableCell>

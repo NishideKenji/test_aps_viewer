@@ -216,25 +216,76 @@ export default function AutodeskFusionViewer({
           viewerRef.current = viewer
           viewer.start()
 
-          const urn = derivativesId.replace(/^urn:/, '')
-          const docId = `urn:${urn}`
+          const docId = derivativesId.startsWith('urn:')
+            ? derivativesId
+            : `urn:${derivativesId}`
 
           AutodeskNS.Viewing.Document.load(
             docId,
             (doc: any) => {
               if (disposed) return
-              const defaultModel = doc.getRoot().getDefaultGeometry()
-              viewer.loadDocumentNode(doc, defaultModel)
-              setCanView(true)
-              onStatusChange?.('shown', {
-                extType: itemType ?? latest?.attributes?.extension?.type,
-              })
+              const root = doc.getRoot()
+
+              // まず default を試す
+              let target = root.getDefaultGeometry()
+
+              // default が無ければ 3D を拾う
+              if (!target) {
+                const geos3d =
+                  AutodeskNS.Viewing.Document.getSubItemsWithProperties(
+                    root,
+                    { type: 'geometry', role: '3d' },
+                    true,
+                  )
+                if (geos3d?.length) target = geos3d[0]
+              }
+
+              // それでも無ければ 2D を拾う
+              if (!target) {
+                const geos2d =
+                  AutodeskNS.Viewing.Document.getSubItemsWithProperties(
+                    root,
+                    { type: 'geometry', role: '2d' },
+                    true,
+                  )
+                if (geos2d?.length) target = geos2d[0]
+              }
+
+              if (!target) {
+                // 表示できるジオメトリが本当に無い
+                setCanView(false)
+                setReason(
+                  'このバージョンに表示可能なジオメトリが見つかりません（3D/2D）',
+                )
+                onStatusChange?.('hidden', {
+                  extType,
+                  reason: 'no viewable geometry',
+                })
+                return
+              }
+
+              if (viewerRef.current) {
+                // 既存 viewer を使う
+              }
+
+              viewer.loadDocumentNode(doc, target).then(
+                () => {
+                  setCanView(true)
+                  onStatusChange?.('shown', { extType })
+                },
+                (err: any) => {
+                  setCanView(false)
+                  setReason('モデルのロードに失敗しました')
+                  setError(`loadDocumentNode error: ${JSON.stringify(err)}`)
+                  onStatusChange?.('error', err)
+                },
+              )
             },
             (e: any) => {
               const msg = `Document.load error: ${JSON.stringify(e)}`
               setError(msg)
               setCanView(false)
-              setReason('ドキュメントのロードに失敗しました')
+              setReason('ドキュメントのロードに失敗しました（Document.load）')
               onStatusChange?.('error', e)
             },
           )

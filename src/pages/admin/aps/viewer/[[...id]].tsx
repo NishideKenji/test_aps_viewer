@@ -3,10 +3,10 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import React from 'react'
 
-import AutodeskFusionViewer from '@/components/admin/aps/apsviewer'
+import ApsViewer from '@/components/admin/aps/apsviewer2'
 import { trpc } from '@/utils/trpc'
 
-export default function ApsViewer() {
+export default function ApsViewerx() {
   const { data: session } = useSession()
 
   const router = useRouter()
@@ -25,13 +25,16 @@ export default function ApsViewer() {
       <Container maxWidth={false} sx={{ py: 2 }}>
         <Box component={'div'} p={10}>
           <Grid container spacing={10}>
-            {accessToken && content && (
-              <AutodeskFusionViewer
-                accessToken={accessToken || ''}
-                projectId={content ? content.projectId : ''}
-                itemId={content ? content.id : ''}
-              />
-            )}
+            <div style={{ width: '100%', height: '80vh' }}>
+              {accessToken && content && (
+                <>
+                  <ApsViewer
+                    urn={id ? id.toString() : ''}
+                    accessToken={accessToken}
+                  />
+                </>
+              )}
+            </div>
           </Grid>
         </Box>
       </Container>
