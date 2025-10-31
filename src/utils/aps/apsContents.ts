@@ -87,3 +87,51 @@ export async function getProjectFirstLevel(
   }
   return results
 }
+
+export async function getAllFolderContents(
+  token: string,
+  projectId: string,
+  folderId: string,
+  parentId: string | null = null,
+): Promise<FirstLevelEntry[]> {
+  // まず現在フォルダの直下を取得
+  const entries = await getFolderContentsOnce(token, projectId, folderId)
+
+  const results: FirstLevelEntry[] = []
+
+  for (const e of entries) {
+    results.push(e) // 今の階層を追加
+
+    // 📁 フォルダならさらに中を掘る
+    if (e.kind === 'folder') {
+      console.log('called')
+      const children = await getAllFolderContents(
+        token,
+        projectId,
+        e.id,
+        e.parentId,
+      )
+      results.push(...children)
+    }
+  }
+
+  return results
+}
+
+/**
+ * 🔹「Projectの第一階層」= すべてのトップフォルダ直下の entries（folders/items）をフラットで取得
+ */
+export async function getProjectAllLevel(
+  token: string,
+  hubId: string,
+  projectId: string,
+): Promise<FirstLevelEntry[]> {
+  const tops = await getTopFolders(token, hubId, projectId)
+
+  const results: FirstLevelEntry[] = []
+  for (const t of tops) {
+    const entries = await getAllFolderContents(token, projectId, t.id)
+    results.push(...entries)
+  }
+  return results
+}
