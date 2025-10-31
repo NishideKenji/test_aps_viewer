@@ -3,7 +3,6 @@ import { apsRouter } from './apsRouter'
 import { helloRouter } from './helloRouter'
 import { registerRouter } from './registerRouter'
 import { roleRouter } from './roleRouter'
-import { taskRouter } from './taskRouter'
 import { tokenRouter } from './tokenRouter'
 import { userRouter } from './userRouter'
 
@@ -15,7 +14,6 @@ import { userRouter } from './userRouter'
 export const appRouter = router({
   helloRouter,
   registerRouter,
-  taskRouter,
   tokenRouter,
   roleRouter,
   userRouter,

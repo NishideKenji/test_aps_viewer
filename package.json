@@ -13,6 +13,7 @@
     "format:eslint": "yarn lint:eslint --fix",
     "format:prettier": "yarn lint:prettier --write",
     "typecheck": "tsc",
+    "tsc-check": "tsc --noEmit",
     "codegen": "graphql-codegen",
     "test": "vitest run",
     "test:watch": "vitest watch"

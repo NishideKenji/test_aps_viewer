@@ -16,7 +16,6 @@ export default function ApsItems() {
               <Typography variant="h5" gutterBottom>
                 APS Item 一覧
               </Typography>
-              <ApsContentList />
             </Grid>
           </Grid>
         </Box>
