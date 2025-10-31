@@ -1,72 +1,54 @@
-import { Box, Button, Container, Grid, Typography } from '@mui/material'
-import type { Task } from '@prisma/client'
+import { Container, Grid, Typography } from '@mui/material'
 import { Inter } from 'next/font/google'
 import { useRouter } from 'next/router'
-import { signIn, useSession } from 'next-auth/react'
-import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 
-import TaskDetails from '@/components/task/taskdetails'
-import TaskList from '@/components/task/tasklist'
+import { ApsContentList } from '@/components/admin/aps/apsContentList'
+import { ProjectList } from '@/components/aps/projectlist'
 import { trpc } from '@/utils/trpc'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const defaultTask = (): Task => {
-  return {
-    id: '',
-    title: '',
-    is_finish: false,
-    description: '',
-    end_date_scheduled: null,
-    end_date_actual: null,
-  }
-}
-
 export default function Home() {
   const { data: session } = useSession()
-
-  const tasks = trpc.taskRouter.list.useQuery()
-
-  const getSelectedTask = (id: string | string[] | undefined) => {
-    return (
-      tasks.data?.tasks.find((task) => task.id === id?.toString()) ??
-      defaultTask()
-    )
-  }
 
   const router = useRouter()
   const { id } = router.query
 
-  useEffect(() => {
-    tasks.refetch()
-  }, [id])
+  const { data: contents } = trpc.apsRouter.getContentListByProjectId.useQuery(
+    {
+      projectId: id ? (Array.isArray(id) ? id[0] : id) : '',
+    },
+    {
+      enabled: !!id,
+    },
+  )
+
+  const { data: projects } = trpc.apsRouter.projectlist.useQuery(undefined)
 
   return (
     <Container maxWidth={false}>
-      <Box p={10}>
-        {session ? (
-          tasks.data ? (
-            <Grid container spacing={10}>
-              <Grid item xs={6}>
-                <Typography variant="h5" gutterBottom>
-                  Task List
-                </Typography>
-                {<TaskList tasks={tasks.data.tasks} />}
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="h5" gutterBottom>
-                  {id ? 'Details and Edit Task' : 'Create New Task'}
-                </Typography>
-                <TaskDetails task={getSelectedTask(id)} />
-              </Grid>
-            </Grid>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid item xs={12} md={4}>
+          {contents ? (
+            <>
+              <Typography component="h4" variant="h6">
+                コンテンツ一覧
+              </Typography>
+              <ApsContentList contents={contents} />
+            </>
           ) : (
-            <div>Loading...</div>
-          )
-        ) : (
-          <Button onClick={() => signIn()}>signIn</Button>
-        )}
-      </Box>
+            <>
+              <Typography component="h4" variant="h6">
+                プロジェクト一覧
+              </Typography>
+              {projects && <ProjectList projects={projects} />}
+            </>
+          )}
+        </Grid>
+
+        <Grid item xs={12} md={8}></Grid>
+      </Grid>
     </Container>
   )
 }

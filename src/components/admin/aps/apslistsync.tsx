@@ -4,9 +4,7 @@ import { type FC, useState } from 'react'
 
 import { trpc } from '@/utils/trpc'
 
-import { ApsContentList } from './apsContentList'
-import AutodeskFusionViewer from './apsviewer'
-import { ProjectList } from './projectlist'
+import { ProjectListAdmin } from './projectlist'
 
 export type ControlPanelForApsListSyncManuallyProps = {
   onGetHubs: () => Promise<void>
@@ -245,12 +243,10 @@ export const ControlPanelForApsListSyncManually: FC<
               {isSubmitting ? 'Processing' : 'Delete'}
             </Button>
           </Paper>
-          {projectlist && <ProjectList projects={projectlist} />}
+          {projectlist && <ProjectListAdmin projects={projectlist} />}
         </Grid>
 
-        <Grid item xs={12} md={8}>
-          <ApsContentList />
-        </Grid>
+        <Grid item xs={12} md={8}></Grid>
       </Grid>
     </>
   )

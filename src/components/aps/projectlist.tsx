@@ -13,7 +13,7 @@ interface Props {
 }
 
 //Tokenの一覧を表示するためのコンポーネント(管理画面用)
-export const ProjectListAdmin = ({ projects }: Props) => {
+export const ProjectList = ({ projects }: Props) => {
   return (
     <Table size="small">
       <TableHead>

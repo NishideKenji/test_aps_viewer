@@ -2,11 +2,22 @@ import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
 
-import { trpc } from '@/utils/trpc'
+interface Props {
+  contents: {
+    id: string
+    projectId: string
+    parentId: string
+    name: string
+    kind: string
+    dataType: string | null
+    translated: boolean | null
+    urn: string | null
+    updatedAt: Date
+  }[]
+}
 
 //Tokenの一覧を表示するためのコンポーネント(管理画面用)
-export const ApsContentList = () => {
-  const { data: contents } = trpc.apsRouter.getContentList.useQuery()
+export const ApsContentList = ({ contents }: Props) => {
   return (
     <Table size="small">
       <TableHead>

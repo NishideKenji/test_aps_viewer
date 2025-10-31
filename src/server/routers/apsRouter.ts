@@ -364,6 +364,33 @@ export const apsRouter = router({
     }
   }),
 
+  getContentListByProjectId: procedure
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
+    .query(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const contents = await opt.ctx.prisma.apsContent.findMany({
+          where: { projectId: opt.input.projectId },
+          select: {
+            id: true,
+            projectId: true,
+            parentId: true,
+            name: true,
+            kind: true,
+            dataType: true,
+            translated: true,
+            urn: true,
+            updatedAt: true,
+          },
+          orderBy: [{ projectId: 'asc' }, { name: 'asc' }],
+        })
+        return contents
+      }
+    }),
+
   getContent: procedure
     .input(
       z.object({
