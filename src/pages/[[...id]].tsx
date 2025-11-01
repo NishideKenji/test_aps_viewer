@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 
 import { ApsContentList } from '@/components/admin/aps/apsContentList'
+import { ApsContentTree } from '@/components/admin/aps/apsContentTree'
 import { ProjectList } from '@/components/aps/projectlist'
 import { trpc } from '@/utils/trpc'
 
@@ -35,7 +36,7 @@ export default function Home() {
               <Typography component="h4" variant="h6">
                 コンテンツ一覧
               </Typography>
-              <ApsContentList contents={contents} />
+              <ApsContentTree contents={contents} />
             </>
           ) : (
             <>
