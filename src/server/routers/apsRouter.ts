@@ -14,7 +14,15 @@ import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
 import { procedure, router } from '../trpc'
 
+/**
+ * APS関連ルーター
+ */
 export const apsRouter = router({
+  /** APSハブ情報を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   updateHubs: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -39,6 +47,11 @@ export const apsRouter = router({
     }
   }),
 
+  /** APSハブ情報を削除する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   deleteHubs: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -49,6 +62,11 @@ export const apsRouter = router({
     }
   }),
 
+  /** APSプロジェクト情報を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   updateProjects: procedure.mutation(async (opt) => {
     console.log('updateProjects called')
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
@@ -102,6 +120,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSハブ・プロジェクト情報を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   updateHubsAndProjects: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -149,6 +173,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSハブ・プロジェクト情報を削除する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   deleteHubsAndProjects: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -160,6 +190,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSコンテンツ情報（第一階層のみ）を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getContentsFirstLevel: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -248,6 +284,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSコンテンツ情報（全階層）を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getContentsAll: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -321,6 +363,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSコンテンツ情報をすべて削除する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   deleteContents: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
@@ -331,6 +379,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSプロジェクト情報を取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   projectlist: procedure.query(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       const projects = await opt.ctx.prisma.project.findMany({
@@ -347,6 +401,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * APSコンテンツ情報をすべて取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getContentList: procedure.query(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       const contents = await opt.ctx.prisma.apsContent.findMany({
@@ -367,6 +427,12 @@ export const apsRouter = router({
     }
   }),
 
+  /**
+   * プロジェクトIDに基づいてAPSコンテンツ情報を取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getContentListByProjectId: procedure
     .input(
       z.object({
@@ -394,6 +460,12 @@ export const apsRouter = router({
       }
     }),
 
+  /**
+   * APSコンテンツ情報をIDに基づいて取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getContent: procedure
     .input(
       z.object({
@@ -409,6 +481,12 @@ export const apsRouter = router({
       }
     }),
 
+  /**
+   * APSトークンを取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
   getToken: procedure
     .input(
       z.object({
