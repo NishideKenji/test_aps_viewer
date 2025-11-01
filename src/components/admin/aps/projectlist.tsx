@@ -1,6 +1,17 @@
-import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material'
+import {
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+} from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
+import { useSnackbar } from 'notistack'
+import { useState } from 'react'
+
+import { trpc } from '@/utils/trpc'
 
 interface Props {
   projects: {
@@ -14,6 +25,11 @@ interface Props {
 
 //Tokenの一覧を表示するためのコンポーネント(管理画面用)
 export const ProjectListAdmin = ({ projects }: Props) => {
+  const { enqueueSnackbar } = useSnackbar()
+  const onGetContentsStructureByProjectID =
+    trpc.apsRouter.getContentsStructureByProjectID.useMutation().mutateAsync
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
   return (
     <Table size="small">
       <TableHead>
@@ -22,6 +38,7 @@ export const ProjectListAdmin = ({ projects }: Props) => {
           <TableCell>Hub</TableCell>
           <TableCell>Project</TableCell>
           <TableCell>Updated</TableCell>
+          <TableCell>UPD</TableCell>
         </TableRow>
       </TableHead>
 
@@ -36,6 +53,34 @@ export const ProjectListAdmin = ({ projects }: Props) => {
               <TableCell>{project.name}</TableCell>
               <TableCell>
                 {dayjs(project.updatedAt).format('YYYY/MM/DD HH:mm')}
+              </TableCell>
+              <TableCell>
+                <Button
+                  disabled={isSubmitting}
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  onClick={async () => {
+                    setIsSubmitting(true)
+                    try {
+                      await onGetContentsStructureByProjectID({
+                        projectId: project.id,
+                      })
+                      enqueueSnackbar('Contentsのデータを取得しました', {
+                        variant: 'success',
+                      })
+                    } catch (err) {
+                      console.error(err)
+                      enqueueSnackbar('システムエラーが発生しました', {
+                        variant: 'error',
+                      })
+                    } finally {
+                      setIsSubmitting(false)
+                    }
+                  }}
+                >
+                  {isSubmitting ? 'Processing' : 'Update'}
+                </Button>
               </TableCell>
             </TableRow>
           )

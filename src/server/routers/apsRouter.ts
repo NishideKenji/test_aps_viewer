@@ -364,6 +364,39 @@ export const apsRouter = router({
   }),
 
   /**
+   * プロジェクトIDに基づいてAPSコンテンツ情報（全階層）を最新化する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
+  getContentsStructureByProjectID: procedure
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
+        })) || { token: '' }
+
+        const project = await opt.ctx.prisma.project.findUnique({
+          where: { id: opt.input.projectId },
+        })
+        if (!project) {
+          throw new Error('Project not found')
+        }
+        const contents = await getProjectAllLevel(
+          access_token || '',
+          project.hubId,
+          project.id,
+        )
+        console.log(contents)
+      }
+    }),
+
+  /**
    * APSコンテンツ情報をすべて削除する
    * 管理者権限を持つユーザーのみアクセス可能
    * @param opt
