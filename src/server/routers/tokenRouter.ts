@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
-import { PermitedRoleListAdmin } from '@/global_constants'
+import {
+  KEYNAME_APS_ACCESS_TOKEN,
+  KEYNAME_APS_CLIENT_ID,
+  KEYNAME_APS_CLIENT_SECRET,
+  KEYNAME_APS_REFRESH_TOKEN,
+  PermitedRoleListAdmin,
+} from '@/global_constants'
 import { refreshAccessToken } from '@/utils/aps/auth'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
@@ -11,13 +17,13 @@ export const tokenRouter = router({
     //    console.log('Token update triggered')
     try {
       const { token: refreshToken } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: 'APS_REFRESH_TOKEN' },
+        where: { type: KEYNAME_APS_REFRESH_TOKEN },
       })) || { refreshToken: '' }
       const { token: client_id } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: 'APS_CLIENT_ID' },
+        where: { type: KEYNAME_APS_CLIENT_ID },
       })) || { client_id: '' }
       const { token: client_secret } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: 'APS_CLIENT_SECRET' },
+        where: { type: KEYNAME_APS_CLIENT_SECRET },
       })) || { client_secret: '' }
       const token = await refreshAccessToken(
         refreshToken || '',
@@ -28,14 +34,14 @@ export const tokenRouter = router({
       //      console.log('Upserting token:', token)
 
       await opt.ctx.prisma.token.upsert({
-        where: { type: 'APS_ACCESS_TOKEN' },
-        create: { type: 'APS_ACCESS_TOKEN', token: token.access_token },
+        where: { type: KEYNAME_APS_ACCESS_TOKEN },
+        create: { type: KEYNAME_APS_ACCESS_TOKEN, token: token.access_token },
         update: { token: token.access_token },
       })
 
       await opt.ctx.prisma.token.upsert({
-        where: { type: 'APS_REFRESH_TOKEN' },
-        create: { type: 'APS_REFRESH_TOKEN', token: token.refresh_token },
+        where: { type: KEYNAME_APS_REFRESH_TOKEN },
+        create: { type: KEYNAME_APS_REFRESH_TOKEN, token: token.refresh_token },
         update: { token: token.refresh_token },
       })
     } catch (e) {

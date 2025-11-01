@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import React, { useMemo } from 'react'
 
+import { KEYNAME_APS_ACCESS_TOKEN } from '@/global_constants'
 import { trpc } from '@/utils/trpc'
 
 const ApsViewerDebug = dynamic(
@@ -23,8 +24,9 @@ export default function ApsViewerPage() {
     return Array.isArray(q) ? q[0] : q ?? ''
   }, [router.isReady, router.query.id])
 
+  //サーバーサイド変数なので機能しないので、今後必要なら修正
   const { data: accessToken, isLoading: isLoadingToken } =
-    trpc.apsRouter.getToken.useQuery({ type: 'APS_ACCESS_TOKEN' })
+    trpc.apsRouter.getToken.useQuery({ type: KEYNAME_APS_ACCESS_TOKEN })
 
   const effectiveUrn = urnParam // || fallbackUrn
 

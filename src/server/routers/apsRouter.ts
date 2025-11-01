@@ -1,6 +1,9 @@
 import { z } from 'zod'
 
-import { PermitedRoleListAdmin } from '@/global_constants'
+import {
+  KEYNAME_APS_ACCESS_TOKEN,
+  PermitedRoleListAdmin,
+} from '@/global_constants'
 import {
   getProjectAllLevel,
   getProjectFirstLevel,
@@ -16,7 +19,7 @@ export const apsRouter = router({
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
         const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: 'APS_ACCESS_TOKEN' },
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
         const hubsList = await getHubsList(access_token || '')
         for (const hub of hubsList) {
@@ -51,7 +54,7 @@ export const apsRouter = router({
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
         const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: 'APS_ACCESS_TOKEN' },
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
 
         /*
@@ -103,7 +106,7 @@ export const apsRouter = router({
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
         const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: 'APS_ACCESS_TOKEN' },
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
         const hubsList = await getHubsList(access_token || '')
 
@@ -161,7 +164,7 @@ export const apsRouter = router({
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
         const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: 'APS_ACCESS_TOKEN' },
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
 
         const projects = await opt.ctx.prisma.project.findMany()
@@ -249,7 +252,7 @@ export const apsRouter = router({
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
         const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: 'APS_ACCESS_TOKEN' },
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
 
         const projects = await opt.ctx.prisma.project.findMany()

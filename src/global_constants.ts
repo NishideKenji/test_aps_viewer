@@ -61,3 +61,25 @@ export const sizeModeMobile = 960
  * 画面サイズ変更の閾値(これ以下だとスマホモード)
  */
 export const sizeModePhone = 520
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//トークン・シークレット関連の名称定義
+///////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * APS Access Token のデータベース保存時のキー名称
+ */
+export const KEYNAME_APS_ACCESS_TOKEN = 'APS_ACCESS_TOKEN'
+/**
+ * APS Refresh Token のデータベース保存時のキー名称
+ */
+export const KEYNAME_APS_REFRESH_TOKEN = 'APS_REFRESH_TOKEN'
+
+/**
+ * APS Client ID のデータベース保存時のキー名称
+ */
+export const KEYNAME_APS_CLIENT_ID = 'APS_CLIENT_ID'
+
+/**
+ * APS Client Secret のデータベース保存時のキー名称
+ */
+export const KEYNAME_APS_CLIENT_SECRET = 'APS_CLIENT_SECRET'
