@@ -28,6 +28,11 @@ export default function ApsViewerPage() {
   const { data: accessToken, isLoading: isLoadingToken } =
     trpc.apsRouter.getToken.useQuery({ type: 'APS_ACCESS_TOKEN' })
 
+  const ContentsInfo = trpc.apsRouter.getContentInfoByUrn.useQuery({
+    urn: urnParam,
+  })
+  console.log('[Caller] ContentsInfo:', ContentsInfo.data)
+
   const effectiveUrn = urnParam // || fallbackUrn
 
   if (typeof window !== 'undefined') {

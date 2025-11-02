@@ -492,6 +492,55 @@ export const apsRouter = router({
         return contents
       }
     }),
+  /**
+   * プロジェクトIDに基づいてAPSコンテンツ情報を取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
+  getContentInfoByUrn: procedure
+    .input(
+      z.object({
+        urn: z.string(),
+      }),
+    )
+    .query(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        console.log('[Caller] getContentInfoByUrn:', opt.input.urn)
+        const content = await opt.ctx.prisma.apsContent.findFirst({
+          where: { urn: opt.input.urn },
+          select: {
+            id: true,
+            projectId: true,
+            parentId: true,
+            name: true,
+            kind: true,
+            dataType: true,
+            translated: true,
+            urn: true,
+            updatedAt: true,
+          },
+        })
+        console.log('[Caller] getContentInfoByUrn: content:', content)
+        const project = await opt.ctx.prisma.project.findUnique({
+          where: { id: content?.projectId || '' },
+          select: {
+            id: true,
+            name: true,
+            hubId: true,
+            hubName: true,
+            updatedAt: true,
+          },
+        })
+        return {
+          projectName: project?.name,
+          contentName: content?.name,
+          kind: content?.kind,
+          dataType: content?.dataType,
+          translated: content?.translated,
+        }
+      }
+    }),
 
   /**
    * APSコンテンツ情報をIDに基づいて取得する
