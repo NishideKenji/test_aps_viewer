@@ -3,6 +3,7 @@ import { z } from 'zod'
 import {
   KEYNAME_APS_ACCESS_TOKEN,
   PermitedRoleListAdmin,
+  PermitedRoleListAll,
 } from '@/global_constants'
 import {
   getProjectAllLevel,
@@ -564,23 +565,17 @@ export const apsRouter = router({
     }),
 
   /**
-   * APSトークンを取得する
-   * 管理者権限を持つユーザーのみアクセス可能
+   * APSへのアクセストークンを取得する
+   * 読み取りユーザーまでアクセス可能
    * @param opt
    * @return {Promise<void>}
    */
-  getToken: procedure
-    .input(
-      z.object({
-        type: z.string(),
-      }),
-    )
-    .query(async (opt) => {
-      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
-        const tokenEntry = await opt.ctx.prisma.token.findFirst({
-          where: { type: opt.input.type },
-        })
-        return tokenEntry?.token || null
-      }
-    }),
+  getAccessToken: procedure.query(async (opt) => {
+    if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAll)) {
+      const tokenEntry = await opt.ctx.prisma.token.findFirst({
+        where: { type: KEYNAME_APS_ACCESS_TOKEN },
+      })
+      return tokenEntry?.token || null
+    }
+  }),
 })

@@ -26,7 +26,7 @@ export default function ApsViewerPage() {
 
   //サーバーサイド変数なので機能しないので、今後必要なら修正
   const { data: accessToken, isLoading: isLoadingToken } =
-    trpc.apsRouter.getToken.useQuery({ type: 'APS_ACCESS_TOKEN' })
+    trpc.apsRouter.getAccessToken.useQuery()
 
   const ContentsInfo = trpc.apsRouter.getContentInfoByUrn.useQuery({
     urn: urnParam,
