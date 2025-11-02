@@ -8,6 +8,7 @@ import {
 } from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useSnackbar } from 'notistack'
 import { useState } from 'react'
 
@@ -25,6 +26,11 @@ interface Props {
 
 //Tokenの一覧を表示するためのコンポーネント(管理画面用)
 export const ProjectListAdmin = ({ projects }: Props) => {
+  const router = useRouter()
+
+  // 現在のパスを取得
+  const currentPath = router.asPath
+
   const { enqueueSnackbar } = useSnackbar()
   const onGetContentsStructureByProjectID =
     trpc.apsRouter.getContentsStructureByProjectID.useMutation().mutateAsync
@@ -47,7 +53,9 @@ export const ProjectListAdmin = ({ projects }: Props) => {
           return (
             <TableRow key={index}>
               <TableCell>
-                <Link href={`/${project.id}`}>{index + 1}</Link>
+                <Link href={`${currentPath.replace(/\/$/, '')}/${project.id}`}>
+                  {index + 1}
+                </Link>
               </TableCell>
               <TableCell>{project.hubName}</TableCell>
               <TableCell>{project.name}</TableCell>

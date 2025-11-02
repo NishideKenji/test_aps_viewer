@@ -2,6 +2,7 @@
 // MUI v5の場合：
 //import { TreeView, TreeItem } from '@mui/lab'
 // MUI v6の場合：
+import { TaskAlt } from '@mui/icons-material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -9,6 +10,7 @@ import { TreeItem, TreeView } from '@mui/lab'
 import { Box, Chip, Stack, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import React, { useMemo } from 'react'
 
 type Content = {
@@ -64,8 +66,10 @@ function buildTree(list: Content[]): TreeNode[] {
 
 /** TreeItemのラベル（名前＋メタ情報） */
 function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
+  const basePath = '/admin/apsitems'
+
   const primary = node.urn ? (
-    <Link href={`/admin/aps/viewer/${node.urn}`}>{node.name}</Link>
+    <Link href={`${basePath}/${node.projectId}/${node.id}`}>{node.name}</Link>
   ) : (
     <>{node.name}</>
   )
@@ -96,12 +100,9 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
             sx={{ height: 20 }}
           />
         )}
-        <Chip
-          size="small"
-          label={node.translated ? 'Translated' : 'Not translated'}
-          variant="outlined"
-          sx={{ height: 20 }}
-        />
+        {
+          node.translated ? <TaskAlt color="success" /> : '' //<Cancel color="error" />も検討したが、非翻訳は情報として表示したいためアイコンは無し
+        }
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
           {dayjs(node.updatedAt).format('YYYY/MM/DD HH:mm')}
         </Typography>
@@ -125,7 +126,7 @@ function renderTree(node: TreeNode): React.ReactNode {
 }
 
 // メイン：ツリー表示
-export const ApsContentTree: React.FC<Props> = ({ contents }) => {
+export const ApsContentTreeAdmin: React.FC<Props> = ({ contents }) => {
   const roots = useMemo(() => buildTree(contents ?? []), [contents])
 
   // 展開制御が必要なら expanded/state を追加してください（ここではデフォルト挙動）
