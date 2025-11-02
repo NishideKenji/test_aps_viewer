@@ -26,7 +26,7 @@ export default function ApsViewerPage() {
 
   //サーバーサイド変数なので機能しないので、今後必要なら修正
   const { data: accessToken, isLoading: isLoadingToken } =
-    trpc.apsRouter.getToken.useQuery({ type: KEYNAME_APS_ACCESS_TOKEN })
+    trpc.apsRouter.getToken.useQuery({ type: 'APS_ACCESS_TOKEN' })
 
   const effectiveUrn = urnParam // || fallbackUrn
 
@@ -60,7 +60,7 @@ export default function ApsViewerPage() {
           urn={effectiveUrn} // ← ここが常に値ありになる
           accessToken={accessToken} // viewables:read 必須
           prefer="auto"
-          debug
+          debug={true}
         />
       )}
     </div>
