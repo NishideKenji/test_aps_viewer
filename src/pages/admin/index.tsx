@@ -26,17 +26,12 @@ const Admin = () => {
           <ul>
             <li>
               <Button variant="text" href="/admin/apsitems">
-                APS Item 一覧
-              </Button>
-            </li>
-            <li>
-              <Button variant="text" href="/admin/aps">
-                APS更新
+                APS コンテンツ管理(同期処理など)・閲覧
               </Button>
             </li>
             <li>
               <Button variant="text" href="/admin/tokenupd">
-                トークン管理
+                トークン・シークレット管理
               </Button>
             </li>
             <li>

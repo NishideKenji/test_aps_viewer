@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { ApsContentTreeAdmin } from '@/components/admin/aps/apsContentTree'
 import { ApsSyncControlPanel } from '@/components/admin/aps/apsSyncControlPanel'
 import { ProjectListAdmin } from '@/components/admin/aps/projectlist'
+import { ControlPanelForUpdateTokenManually } from '@/components/admin/token/tokenupd'
 import { PermitedRoleListAll } from '@/global_constants'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 import { trpc } from '@/utils/trpc'
@@ -55,6 +56,8 @@ export default function ApsViewerPage() {
   const onDeleteHubsAndProjects =
     trpc.apsRouter.deleteHubsAndProjects.useMutation().mutateAsync
 
+  const onUpdateToken = trpc.tokenRouter.updateToken.useMutation().mutateAsync
+
   if (!checkIsAuthorized(session, PermitedRoleListAll)) {
     return <div style={{ padding: 8 }}>No session or not authorized</div>
   }
@@ -73,6 +76,9 @@ export default function ApsViewerPage() {
             </>
           ) : (
             <>
+              <ControlPanelForUpdateTokenManually
+                onUpdateToken={onUpdateToken}
+              />
               <ApsSyncControlPanel
                 onUpdateHubsAndProjects={onUpdateHubsAndProjects}
                 onDeleteHubsAndProjects={onDeleteHubsAndProjects}
