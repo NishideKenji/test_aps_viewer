@@ -1,8 +1,6 @@
 // ApsContentTree.tsx
 // MUI v5の場合：
-//import { TreeView, TreeItem } from '@mui/lab'
-// MUI v6の場合：
-import { Cancel, TaskAlt } from '@mui/icons-material'
+import { TaskAlt } from '@mui/icons-material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -68,7 +66,7 @@ function buildTree(list: Content[]): TreeNode[] {
 function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
   const router = useRouter()
   const primary = node.urn ? (
-    <Link href={`/viewer/${node.projectId}/${node.id}`}>{node.name}</Link>
+    <Link href={`/${node.projectId}/${node.id}`}>{node.name}</Link>
   ) : (
     <>{node.name}</>
   )
