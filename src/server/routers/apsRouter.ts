@@ -542,6 +542,25 @@ export const apsRouter = router({
         }
       }
     }),
+  /**
+   * コンテンツIDに基づいてAPSコンテンツ情報を取得する
+   * @param opt
+   * @return {Promise<void>}
+   */
+  getContentInfoById: procedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .query(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const content = await opt.ctx.prisma.apsContent.findFirst({
+          where: { id: opt.input.id },
+        })
+        return content
+      }
+    }),
 
   /**
    * APSコンテンツ情報をIDに基づいて取得する
