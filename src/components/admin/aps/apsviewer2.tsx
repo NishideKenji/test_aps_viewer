@@ -205,9 +205,65 @@ export default function ApsViewerDebug({
         // Document.load
         emit('loading-document', urn)
         const docUrn = urn.startsWith('urn:') ? urn : `urn:${urn}`
+        console.log('Loading document:', docUrn)
         Autodesk.Viewing.Document.load(
           docUrn,
           (doc: any) => {
+            const root = doc.getRoot()
+
+            // 役割ベースの簡易検索
+            const three = root.search?.({ role: '3d' }) ?? []
+            const two = root.search?.({ role: '2d' }) ?? []
+
+            // 公開APIのみでの再帰列挙（getSubItemsWithProperties の代替）
+            const collected: any[] = []
+            const walk = (node: any) => {
+              const kids = node.getChildren?.() || []
+              for (const k of kids) {
+                const role = k.getRole?.()
+                const type = k.getType?.()
+                const viewable = k.isViewable?.() === true // viewer が読み込めるノード
+                if (
+                  viewable ||
+                  type === 'geometry' ||
+                  role === '3d' ||
+                  role === '2d'
+                ) {
+                  collected.push(k)
+                }
+                walk(k)
+              }
+            }
+            walk(root)
+
+            // 見える候補を一覧
+            const rows = [...three, ...two, ...collected]
+            const uniq = Array.from(new Set(rows)) // ざっくり重複排除
+            console.table(
+              uniq.map((n: any) => ({
+                name: n.getName?.(),
+                role: n.getRole?.(),
+                type: n.getType?.(),
+                guid: n.getGuid?.(),
+                mime: n.getMimeType?.(),
+                urn: n.getURN?.(),
+                default: n.isDefault?.(),
+                viewable: n.isViewable?.(),
+              })),
+            )
+            console.log(
+              'defaultGeometry exists:',
+              !!root.getDefaultGeometry?.(),
+            )
+
+            // URN が version か（lineage ではないか）を確認
+            const decoded = decodeApsUrn(urn)
+            console.log('decoded URN:', decoded)
+
+            fetchManifest(urn, accessToken).then((manifest) => {
+              console.log('manifest:', manifest)
+            })
+
             try {
               emit('searching-viewable')
               const root = doc.getRoot()
@@ -288,4 +344,48 @@ export default function ApsViewerDebug({
       )}
     </div>
   )
+}
+function decodeApsUrn(urnOrB64: string): string | null {
+  // 'urn:' 付きでも素で入ってきても両対応
+  const b64url = (
+    urnOrB64.startsWith('urn:') ? urnOrB64.slice(4) : urnOrB64
+  ).trim()
+  // URL-safe → 通常Base64へ
+  const base64 = b64url.replace(/-/g, '+').replace(/_/g, '/')
+  // パディング付与
+  const pad = base64.length % 4
+  const padded = pad ? base64 + '='.repeat(4 - pad) : base64
+  try {
+    return atob(padded)
+  } catch {
+    return null // そもそもBase64じゃない（rawの lineage 文字列など）
+  }
+}
+
+async function fetchManifest(urn: string, token: string) {
+  const clean = urn.replace(/^urn:/, '')
+  const res = await fetch(
+    `https://developer.api.autodesk.com/modelderivative/v2/designdata/${clean}/manifest`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
+  )
+  const j = await res.json()
+  // manifest を j で持っている前提
+  const summary = (j.derivatives || []).map((d: any, i: number) => ({
+    i,
+    outputType: d.outputType, // ← 'svf' | 'svf2' | 'otg' が欲しい
+    status: d.status,
+    childRoles: (d.children || []).map((c: any) => c.role),
+    childTypes: (d.children || []).map((c: any) => c.type),
+  }))
+  console.table(summary)
+  console.log('manifest.status:', j.status)
+  console.log(
+    'manifest.derivatives:',
+    (j.derivatives || []).map((d: any) => ({
+      outputType: d.outputType,
+      status: d.status,
+      roles: (d.children || []).map((c: any) => c.role),
+    })),
+  )
+  return j
 }

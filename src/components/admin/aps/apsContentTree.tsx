@@ -7,11 +7,14 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
 import { TreeItem, TreeView } from '@mui/lab'
-import { Box, Chip, Stack, Typography } from '@mui/material'
+import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useSnackbar } from 'notistack'
 import React, { useMemo } from 'react'
+
+import { trpc } from '@/utils/trpc'
 
 type Content = {
   id: string
@@ -68,6 +71,11 @@ function buildTree(list: Content[]): TreeNode[] {
 function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
   const basePath = '/admin/apsitems'
 
+  const { enqueueSnackbar } = useSnackbar()
+
+  const onCheckIsViewableReadyById =
+    trpc.apsRouter.checkIsViewableReadyById.useMutation().mutateAsync
+
   const primary = node.urn ? (
     <Link href={`${basePath}/${node.projectId}/${node.id}`}>{node.name}</Link>
   ) : (
@@ -106,6 +114,30 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
           {dayjs(node.updatedAt).format('YYYY/MM/DD HH:mm')}
         </Typography>
+
+        <Button
+          //disabled={isSubmitting}
+          type="submit"
+          variant="contained"
+          color="primary"
+          onClick={async () => {
+            //setIsSubmitting(true)
+            const ans = await onCheckIsViewableReadyById({
+              id: node.id,
+            })
+            if (ans) {
+              enqueueSnackbar('Viewerで表示可能な状態です', {
+                variant: 'success',
+              })
+            } else {
+              enqueueSnackbar('Viewerで表示可能な状態ではありません', {
+                variant: 'warning',
+              })
+            }
+          }}
+        >
+          {'Update'}
+        </Button>
       </Box>
     </Stack>
   )

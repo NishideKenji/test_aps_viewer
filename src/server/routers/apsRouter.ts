@@ -11,6 +11,7 @@ import {
 } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
 import { getViewerInfo } from '@/utils/aps/getViewerInfo'
+import { isViewableReady } from '@/utils/aps/isViewableReady'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
 import { procedure, router } from '../trpc'
@@ -559,6 +560,35 @@ export const apsRouter = router({
           where: { id: opt.input.id },
         })
         return content
+      }
+    }),
+
+  /**
+   * APSコンテンツのViewable準備状況をIDに基づいて取得する
+   * @param opt
+   * @return {Promise<void>}
+   */
+  checkIsViewableReadyById: procedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
+        })) || { token: '' }
+
+        const content = await opt.ctx.prisma.apsContent.findFirst({
+          where: { id: opt.input.id },
+        })
+
+        const ans = await isViewableReady(
+          access_token || '',
+          content?.urn || '',
+        )
+        return ans
       }
     }),
 
