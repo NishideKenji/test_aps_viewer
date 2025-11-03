@@ -366,6 +366,46 @@ export const apsRouter = router({
   }),
 
   /**
+   * APSコンテンツのURN、タイプ、翻訳状況をIDに基づいてAPSから取得し、閲覧システムのDBを更新する
+   * @param opt
+   * @return {Promise<void>}
+   */
+  syncContentInfoById: procedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
+        })) || { token: '' }
+
+        const content = await opt.ctx.prisma.apsContent.findUnique({
+          where: { id: opt.input.id },
+        })
+        const itemInfo = await getViewerInfo(
+          access_token || '',
+          content?.projectId || '',
+          opt.input.id,
+        )
+
+        await opt.ctx.prisma.apsContent.update({
+          where: { id: opt.input.id },
+          data: {
+            versionId: itemInfo.versionId,
+            urn: itemInfo.urn,
+            dataType: itemInfo.dataType,
+            translated: itemInfo.translated,
+          },
+        })
+
+        return itemInfo
+      }
+    }),
+
+  /**
    * プロジェクトIDに基づいてAPSコンテンツ情報（全階層）を最新化する
    * 管理者権限を持つユーザーのみアクセス可能
    * @param opt

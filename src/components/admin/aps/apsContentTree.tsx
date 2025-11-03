@@ -74,7 +74,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
   const { enqueueSnackbar } = useSnackbar()
 
   const onCheckIsViewableReadyById =
-    trpc.apsRouter.checkIsViewableReadyById.useMutation().mutateAsync
+    trpc.apsRouter.syncContentInfoById.useMutation().mutateAsync
 
   const primary = node.urn ? (
     <Link href={`${basePath}/${node.projectId}/${node.id}`}>{node.name}</Link>
@@ -114,30 +114,34 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
           {dayjs(node.updatedAt).format('YYYY/MM/DD HH:mm')}
         </Typography>
-
-        <Button
-          //disabled={isSubmitting}
-          type="submit"
-          variant="contained"
-          color="primary"
-          onClick={async () => {
-            //setIsSubmitting(true)
-            const ans = await onCheckIsViewableReadyById({
-              id: node.id,
-            })
-            if (ans) {
-              enqueueSnackbar('Viewerで表示可能な状態です', {
-                variant: 'success',
+        {node.kind === 'item' && (
+          <Button
+            //disabled={isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            onClick={async () => {
+              //setIsSubmitting(true)
+              const ans = await onCheckIsViewableReadyById({
+                id: node.id,
               })
-            } else {
-              enqueueSnackbar('Viewerで表示可能な状態ではありません', {
-                variant: 'warning',
-              })
-            }
-          }}
-        >
-          {'Update'}
-        </Button>
+              if (ans?.translated) {
+                enqueueSnackbar('同期しました。Viewerで表示可能な状態です', {
+                  variant: 'success',
+                })
+              } else {
+                enqueueSnackbar(
+                  '同期しました。Viewerで表示可能な状態ではありません',
+                  {
+                    variant: 'warning',
+                  },
+                )
+              }
+            }}
+          >
+            {'Update'}
+          </Button>
+        )}
       </Box>
     </Stack>
   )
