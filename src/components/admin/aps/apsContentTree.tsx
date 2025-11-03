@@ -76,6 +76,9 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
   const onCheckIsViewableReadyById =
     trpc.apsRouter.syncContentInfoById.useMutation().mutateAsync
 
+  const onEnsureSvf2ById =
+    trpc.apsRouter.ensureSvf2ById.useMutation().mutateAsync
+
   const primary = node.urn ? (
     <Link href={`${basePath}/${node.projectId}/${node.id}`}>{node.name}</Link>
   ) : (
@@ -139,7 +142,36 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
               }
             }}
           >
-            {'Update'}
+            {'Sync'}
+          </Button>
+        )}
+        {node.kind === 'item' && (
+          <Button
+            //disabled={isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            onClick={async () => {
+              //setIsSubmitting(true)
+              const ans = await onEnsureSvf2ById({
+                id: node.id,
+              })
+              if (ans?.result === 'submitted') {
+                enqueueSnackbar('翻訳を依頼しました', {
+                  variant: 'success',
+                })
+              } else if (ans?.result === 'already-ready') {
+                enqueueSnackbar('既に翻訳依頼済みです', {
+                  variant: 'info',
+                })
+              } else {
+                enqueueSnackbar('エラーが発生しました', {
+                  variant: 'warning',
+                })
+              }
+            }}
+          >
+            {'Translate'}
           </Button>
         )}
       </Box>

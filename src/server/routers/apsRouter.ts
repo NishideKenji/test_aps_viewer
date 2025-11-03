@@ -10,6 +10,11 @@ import {
   getProjectFirstLevel,
 } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
+import {
+  ensureSvf2,
+  ensureSvf2Minimal,
+  ensureViewableWithFallback,
+} from '@/utils/aps/ensureSvf2'
 import { getViewerInfo } from '@/utils/aps/getViewerInfo'
 import { isViewableReady } from '@/utils/aps/isViewableReady'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
@@ -402,6 +407,35 @@ export const apsRouter = router({
         })
 
         return itemInfo
+      }
+    }),
+
+  /**
+   * APSコンテンツのSVF2翻訳ジョブをIDに基づいてAPSへ依頼する
+   * @param opt
+   * @return {Promise<void>}
+   */
+  ensureSvf2ById: procedure
+    .input(
+      z.object({
+        id: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
+          where: { type: KEYNAME_APS_ACCESS_TOKEN },
+        })) || { token: '' }
+
+        const content = await opt.ctx.prisma.apsContent.findUnique({
+          where: { id: opt.input.id },
+        })
+        const result = await ensureViewableWithFallback(
+          access_token || '',
+          content?.urn || '',
+        )
+
+        return result
       }
     }),
 
