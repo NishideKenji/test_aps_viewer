@@ -11,7 +11,7 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useSnackbar } from 'notistack'
+import { enqueueSnackbar, useSnackbar } from 'notistack'
 import React, { useMemo, useState } from 'react'
 
 import { trpc } from '@/utils/trpc'
@@ -211,18 +211,67 @@ function renderTree(node: TreeNode): React.ReactNode {
 export const ApsContentTreeAdmin: React.FC<Props> = ({ contents }) => {
   const roots = useMemo(() => buildTree(contents ?? []), [contents])
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const onCheckIsViewableReadyById =
+    trpc.apsRouter.syncContentInfoById.useMutation().mutateAsync
+
+  const handleUpdateClick = async () => {
+    setIsSubmitting(true)
+
+    try {
+      //const contents = await onGetContentListByProjectId({ projectId })
+      //console.log('contents', contents)
+      const numContents = contents.length
+      let count = 0
+      for (const content of contents) {
+        if (content.kind === 'item') {
+          await onCheckIsViewableReadyById({
+            id: content.id,
+          })
+        }
+        count++
+        console.log(`Synced ${count} / ${numContents}`)
+      }
+      //await onGetContentsStructureByProjectID({ projectId })
+      enqueueSnackbar('Contentsの詳細情報を同期しました', {
+        variant: 'success',
+      })
+    } catch (err) {
+      console.error(err)
+      enqueueSnackbar('システムエラーが発生しました', {
+        variant: 'error',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // 展開制御が必要なら expanded/state を追加してください（ここではデフォルト挙動）
   return (
-    <TreeView
-      defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpandIcon={<ChevronRightIcon />}
-      sx={{
-        width: '100%',
-        maxWidth: 900,
-        '& .MuiTreeItem-label': { py: 0.25 }, // 密度調整
-      }}
-    >
-      {roots.map((r) => renderTree(r))}
-    </TreeView>
+    <>
+      <Button
+        disabled={isSubmitting}
+        type="submit"
+        variant="contained"
+        color="primary"
+        onClick={async () => {
+          await handleUpdateClick()
+        }}
+      >
+        {isSubmitting ? 'Processing' : 'コンテンツ詳細同期'}
+      </Button>
+      <TreeView
+        defaultCollapseIcon={<ExpandMoreIcon />}
+        defaultExpandIcon={<ChevronRightIcon />}
+        sx={{
+          width: '100%',
+          maxWidth: 900,
+          '& .MuiTreeItem-label': { py: 0.25 }, // 密度調整
+        }}
+      >
+        {roots.map((r) => renderTree(r))}
+      </TreeView>
+    </>
   )
 }
