@@ -1,5 +1,7 @@
 // utils/aps/getViewerInfo.ts
 
+import { isViewableReady } from './isViewableReady'
+
 export type ViewerInfo = {
   versionId: string
   urn: string // URL-safe base64
@@ -14,20 +16,6 @@ function toUrlSafeBase64(s: string): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/g, '')
-}
-
-/** manifest から翻訳済み判定 */
-async function isTranslated(token: string, urn: string): Promise<boolean> {
-  const res = await fetch(
-    `https://developer.api.autodesk.com/modelderivative/v2/designdata/${urn}/manifest`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' },
-  )
-  if (res.status === 200) {
-    const j = await res.json()
-    return j?.status === 'success'
-  }
-  // 404 = 派生データ未生成
-  return false
 }
 
 /**
@@ -73,7 +61,7 @@ export async function getViewerInfo(
   }
 
   // 3) 翻訳済み？（manifest status=success で true）
-  const translated = await isTranslated(accessToken, urn)
+  const translated = await isViewableReady(accessToken, urn)
 
   return { versionId, urn, dataType, translated }
 }
