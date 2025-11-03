@@ -1,4 +1,4 @@
-import { Box, Container, Grid, Typography } from '@mui/material'
+import { Box, Container, Grid, Link, Typography } from '@mui/material'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
@@ -17,6 +17,7 @@ const ApsViewerDebug = dynamic(
 )
 
 export default function ApsViewerPage() {
+  const basePath = ''
   const { data: session } = useSession()
 
   const router = useRouter()
@@ -52,7 +53,12 @@ export default function ApsViewerPage() {
       <Grid container spacing={2} sx={{ mt: 2 }}>
         <Grid item xs={12} md={4}>
           {projectid ? (
-            <>{contents && <ApsContentTree contents={contents} />}</>
+            <>
+              <Typography component="h4" variant="h6">
+                コンテンツ一覧<Link href={`${basePath}/`}>[Return]</Link>
+              </Typography>
+              {contents && <ApsContentTree contents={contents} />}
+            </>
           ) : (
             <>
               <Typography component="h4" variant="h6">
