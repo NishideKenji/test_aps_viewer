@@ -33,7 +33,7 @@ export const ProjectListAdmin = ({ projects }: Props) => {
 
   const { enqueueSnackbar } = useSnackbar()
   const onGetContentsStructureByProjectID =
-    trpc.apsRouter.getContentsStructureByProjectID.useMutation().mutateAsync
+    trpc.apsRouter.syncContentsStructureByProjectID.useMutation().mutateAsync
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   return (

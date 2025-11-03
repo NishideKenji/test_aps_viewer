@@ -1,6 +1,6 @@
 // ApsContentTree.tsx
 // MUI v5の場合：
-import { TaskAlt } from '@mui/icons-material'
+import { RadioButtonUnchecked, TaskAlt } from '@mui/icons-material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -73,7 +73,17 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
 
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ py: 0.25 }}>
-      <FolderIcon fontSize="small" />
+      {node.kind === 'folder' ? (
+        <FolderIcon fontSize="small" />
+      ) : node.urn ? (
+        node.translated ? (
+          <TaskAlt color="success" fontSize="small" />
+        ) : (
+          <TaskAlt color="disabled" fontSize="small" />
+        )
+      ) : (
+        <RadioButtonUnchecked color="disabled" fontSize="small" />
+      )}
       <Typography variant="body2" sx={{ fontWeight: 600 }}>
         {primary}
       </Typography>
@@ -88,11 +98,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
           alignItems: 'center',
           flexWrap: 'wrap',
         }}
-      >
-        {
-          node.translated ? <TaskAlt color="success" /> : '' //<Cancel color="error" />も検討したが、非翻訳は情報として表示したいためアイコンは無し
-        }
-      </Box>
+      ></Box>
     </Stack>
   )
 }

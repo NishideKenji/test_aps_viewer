@@ -2,7 +2,7 @@
 // MUI v5の場合：
 //import { TreeView, TreeItem } from '@mui/lab'
 // MUI v6の場合：
-import { TaskAlt } from '@mui/icons-material'
+import { RadioButtonUnchecked, TaskAlt } from '@mui/icons-material'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import FolderIcon from '@mui/icons-material/Folder'
@@ -12,7 +12,7 @@ import dayjs from 'dayjs'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useSnackbar } from 'notistack'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { trpc } from '@/utils/trpc'
 
@@ -72,6 +72,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
   const basePath = '/admin/apsitems'
 
   const { enqueueSnackbar } = useSnackbar()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const onCheckIsViewableReadyById =
     trpc.apsRouter.syncContentInfoById.useMutation().mutateAsync
@@ -87,7 +88,17 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
 
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ py: 0.25 }}>
-      <FolderIcon fontSize="small" />
+      {node.kind === 'folder' ? (
+        <FolderIcon fontSize="small" />
+      ) : node.urn ? (
+        node.translated ? (
+          <TaskAlt color="success" fontSize="small" />
+        ) : (
+          <TaskAlt color="disabled" fontSize="small" />
+        )
+      ) : (
+        <RadioButtonUnchecked color="disabled" fontSize="small" />
+      )}
       <Typography variant="body2" sx={{ fontWeight: 600 }}>
         {primary}
       </Typography>
@@ -103,6 +114,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
           flexWrap: 'wrap',
         }}
       >
+        {/*
         {node.dataType && (
           <Chip
             size="small"
@@ -111,20 +123,19 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
             sx={{ height: 20 }}
           />
         )}
-        {
-          node.translated ? <TaskAlt color="success" /> : '' //<Cancel color="error" />も検討したが、非翻訳は情報として表示したいためアイコンは無し
-        }
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
           {dayjs(node.updatedAt).format('YYYY/MM/DD HH:mm')}
         </Typography>
+         */}
         {node.kind === 'item' && (
           <Button
-            //disabled={isSubmitting}
+            size="small"
+            disabled={isSubmitting}
             type="submit"
             variant="contained"
             color="primary"
             onClick={async () => {
-              //setIsSubmitting(true)
+              setIsSubmitting(true)
               const ans = await onCheckIsViewableReadyById({
                 id: node.id,
               })
@@ -140,6 +151,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
                   },
                 )
               }
+              setIsSubmitting(false)
             }}
           >
             {'Sync'}
@@ -147,12 +159,13 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
         )}
         {node.kind === 'item' && (
           <Button
-            //disabled={isSubmitting}
+            size="small"
+            disabled={isSubmitting}
             type="submit"
             variant="contained"
             color="primary"
             onClick={async () => {
-              //setIsSubmitting(true)
+              setIsSubmitting(true)
               const ans = await onEnsureSvf2ById({
                 id: node.id,
               })
@@ -169,6 +182,7 @@ function NodeLabel({ node, index }: { node: TreeNode; index?: number }) {
                   variant: 'warning',
                 })
               }
+              setIsSubmitting(false)
             }}
           >
             {'Translate'}

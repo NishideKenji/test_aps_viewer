@@ -445,7 +445,7 @@ export const apsRouter = router({
    * @param opt
    * @return {Promise<void>}
    */
-  getContentsStructureByProjectID: procedure
+  syncContentsStructureByProjectID: procedure
     .input(
       z.object({
         projectId: z.string(),
@@ -457,6 +457,9 @@ export const apsRouter = router({
           where: { type: KEYNAME_APS_ACCESS_TOKEN },
         })) || { token: '' }
 
+        await opt.ctx.prisma.apsContent.deleteMany({
+          where: { projectId: opt.input.projectId },
+        })
         const project = await opt.ctx.prisma.project.findUnique({
           where: { id: opt.input.projectId },
         })
@@ -468,7 +471,18 @@ export const apsRouter = router({
           project.hubId,
           project.id,
         )
-        console.log(contents)
+        for (const content of contents) {
+          await opt.ctx.prisma.apsContent.create({
+            data: {
+              id: content.id,
+              name: content.name,
+              kind: content.kind,
+              parentId: content.parentId,
+              projectId: project.id,
+            },
+          })
+        }
+        //        console.log(contents)
       }
     }),
 
