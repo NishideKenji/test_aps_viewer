@@ -6,6 +6,7 @@ interface Props {
   tokens: {
     id: string
     type: string
+    expiresIn: number | null
     updatedAt: Date
   }[]
 }
@@ -18,6 +19,7 @@ export const TokenList = ({ tokens }: Props) => {
         <TableRow>
           <TableCell>No</TableCell>
           <TableCell>Type</TableCell>
+          <TableCell>Expires In</TableCell>
           <TableCell>Updated</TableCell>
         </TableRow>
       </TableHead>
@@ -30,6 +32,7 @@ export const TokenList = ({ tokens }: Props) => {
                 <Link href={`/admin/tokenupd/${token.id}`}>{index + 1}</Link>
               </TableCell>
               <TableCell>{token.type}</TableCell>
+              <TableCell>{token.expiresIn}</TableCell>
               <TableCell>
                 {dayjs(token.updatedAt).format('YYYY/MM/DD HH:mm')}
               </TableCell>

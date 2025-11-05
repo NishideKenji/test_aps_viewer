@@ -35,8 +35,15 @@ export const tokenRouter = router({
 
       await opt.ctx.prisma.token.upsert({
         where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        create: { type: KEYNAME_APS_ACCESS_TOKEN, token: token.access_token },
-        update: { token: token.access_token },
+        create: {
+          type: KEYNAME_APS_ACCESS_TOKEN,
+          token: token.access_token,
+          expiresIn: token.expires_in,
+        },
+        update: {
+          token: token.access_token,
+          expiresIn: token.expires_in,
+        },
       })
 
       await opt.ctx.prisma.token.upsert({
@@ -117,7 +124,13 @@ export const tokenRouter = router({
     // セッション情報を取得し、許可されたロールの場合のみリストを取得する
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       const ans = await opt.ctx.prisma.token.findMany({
-        select: { id: true, type: true, updatedAt: true },
+        select: {
+          id: true,
+          type: true,
+          expiresIn: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       })
 
       return ans
@@ -139,11 +152,18 @@ export const tokenRouter = router({
         const temp: {
           id: string
           type: string
+          expiresIn: number | null
           createdAt: Date
           updatedAt: Date
         } | null = await opt.ctx.prisma.token.findUnique({
           where: { id: opt.input.id },
-          select: { id: true, type: true, createdAt: true, updatedAt: true },
+          select: {
+            id: true,
+            type: true,
+            expiresIn: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         })
 
         if (temp) {
@@ -151,6 +171,7 @@ export const tokenRouter = router({
             id: string
             type: string
             token: string
+            expiresIn: number | null
             createdAt: Date
             updatedAt: Date
           } | null = { token: '', ...temp } // tokenは返さない

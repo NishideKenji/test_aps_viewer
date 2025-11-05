@@ -14,6 +14,7 @@ const defaulObjectValue = (): Token => {
     id: '',
     type: '',
     token: '',
+    expiresIn: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
   }
