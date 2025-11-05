@@ -225,15 +225,24 @@ export const ApsContentTreeAdmin: React.FC<Props> = ({ contents }) => {
       const numContents = contents.length
       let count = 0
       for (const content of contents) {
-        if (content.kind === 'item') {
-          await onCheckIsViewableReadyById({
-            id: content.id,
-          })
-        }
         count++
-        console.log(`Synced ${count} / ${numContents}`)
+        if (content.kind === 'item') {
+          try {
+            await onCheckIsViewableReadyById({
+              id: content.id,
+            })
+            enqueueSnackbar(`Synced ${count} / ${numContents}`, {
+              variant: 'success',
+            })
+          } catch (err) {
+            //console.error(`Error syncing content ID: ${content.id}`, err)
+            enqueueSnackbar('システムエラーが発生しました', {
+              variant: 'error',
+            })
+          }
+        }
+        //console.log(`Synced ${count} / ${numContents}`)
       }
-      //await onGetContentsStructureByProjectID({ projectId })
       enqueueSnackbar('Contentsの詳細情報を同期しました', {
         variant: 'success',
       })
