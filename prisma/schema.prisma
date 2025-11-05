@@ -59,15 +59,6 @@ model Role {
   @@map("roles")
 }
 
-model Task {
-  id                 String    @id @default(cuid())
-  title              String
-  is_finish          Boolean
-  description        String?
-  end_date_scheduled DateTime?
-  end_date_actual    DateTime?
-}
-
 model Token {
   id        String   @id @default(cuid()) @map("_id") // ID
   type      String   @unique
