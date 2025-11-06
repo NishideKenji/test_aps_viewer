@@ -1,6 +1,5 @@
 import { router } from '../trpc'
 import { apsRouter } from './apsRouter'
-import { helloRouter } from './helloRouter'
 import { registerRouter } from './registerRouter'
 import { roleRouter } from './roleRouter'
 import { tokenRouter } from './tokenRouter'
@@ -12,7 +11,6 @@ import { userRouter } from './userRouter'
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = router({
-  helloRouter,
   registerRouter,
   tokenRouter,
   roleRouter,

@@ -6,11 +6,7 @@ import {
   getProjectFirstLevel,
 } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
-import {
-  ensureSvf2,
-  ensureSvf2Minimal,
-  ensureViewableWithFallback,
-} from '@/utils/aps/ensureSvf2'
+import { ensureViewableWithFallback } from '@/utils/aps/ensureSvf2'
 import { getApsAccessToken } from '@/utils/aps/getapsaccesstoken'
 import { getViewerInfo } from '@/utils/aps/getViewerInfo'
 import { isViewableReady } from '@/utils/aps/isViewableReady'
