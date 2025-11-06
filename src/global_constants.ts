@@ -83,3 +83,9 @@ export const KEYNAME_APS_CLIENT_ID = 'APS_CLIENT_ID'
  * APS Client Secret のデータベース保存時のキー名称
  */
 export const KEYNAME_APS_CLIENT_SECRET = 'APS_CLIENT_SECRET'
+
+/**
+ * APS Access Token Expires In の再取得閾値（秒）
+ * 60秒 前に再取得
+ */
+export const LIMIT_SECONDS_APS_ACCESS_TOKEN_EXPIRES_IN = 60

@@ -1,58 +1,22 @@
 import { z } from 'zod'
 
-import {
-  KEYNAME_APS_ACCESS_TOKEN,
-  KEYNAME_APS_CLIENT_ID,
-  KEYNAME_APS_CLIENT_SECRET,
-  KEYNAME_APS_REFRESH_TOKEN,
-  PermitedRoleListAdmin,
-} from '@/global_constants'
-import { refreshAccessToken } from '@/utils/aps/auth'
+import { PermitedRoleListAdmin } from '@/global_constants'
+import { updateAccessToken } from '@/utils/aps/getapsaccesstoken'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 
 import { procedure, router } from '../trpc'
 
 export const tokenRouter = router({
+  /**
+   * APSアクセス用トークンを更新する
+   * 管理者ロールのみ実行可能
+   * 呼び出し元でのエラーハンドリングを推奨
+   * 例: await trpc.tokenRouter.updateToken.mutateAsync()
+   * 返り値なし
+   * */
   updateToken: procedure.mutation(async (opt) => {
-    //    console.log('Token update triggered')
-    try {
-      const { token: refreshToken } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: KEYNAME_APS_REFRESH_TOKEN },
-      })) || { refreshToken: '' }
-      const { token: client_id } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: KEYNAME_APS_CLIENT_ID },
-      })) || { client_id: '' }
-      const { token: client_secret } = (await opt.ctx.prisma.token.findFirst({
-        where: { type: KEYNAME_APS_CLIENT_SECRET },
-      })) || { client_secret: '' }
-      const token = await refreshAccessToken(
-        refreshToken || '',
-        client_id || '',
-        client_secret || '',
-      )
-
-      //      console.log('Upserting token:', token)
-
-      await opt.ctx.prisma.token.upsert({
-        where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        create: {
-          type: KEYNAME_APS_ACCESS_TOKEN,
-          token: token.access_token,
-          expiresIn: token.expires_in,
-        },
-        update: {
-          token: token.access_token,
-          expiresIn: token.expires_in,
-        },
-      })
-
-      await opt.ctx.prisma.token.upsert({
-        where: { type: KEYNAME_APS_REFRESH_TOKEN },
-        create: { type: KEYNAME_APS_REFRESH_TOKEN, token: token.refresh_token },
-        update: { token: token.refresh_token },
-      })
-    } catch (e) {
-      console.log(e)
+    if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+      await updateAccessToken()
     }
   }),
 

@@ -1,10 +1,6 @@
 import { z } from 'zod'
 
-import {
-  KEYNAME_APS_ACCESS_TOKEN,
-  PermitedRoleListAdmin,
-  PermitedRoleListAll,
-} from '@/global_constants'
+import { PermitedRoleListAdmin, PermitedRoleListAll } from '@/global_constants'
 import {
   getProjectAllLevel,
   getProjectFirstLevel,
@@ -15,6 +11,7 @@ import {
   ensureSvf2Minimal,
   ensureViewableWithFallback,
 } from '@/utils/aps/ensureSvf2'
+import { getApsAccessToken } from '@/utils/aps/getapsaccesstoken'
 import { getViewerInfo } from '@/utils/aps/getViewerInfo'
 import { isViewableReady } from '@/utils/aps/isViewableReady'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
@@ -33,10 +30,9 @@ export const apsRouter = router({
   updateHubs: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
-        const hubsList = await getHubsList(access_token || '')
+        const access_token = (await getApsAccessToken()) || ''
+
+        const hubsList = await getHubsList(access_token)
         for (const hub of hubsList) {
           await opt.ctx.prisma.hub.upsert({
             where: { id: hub.id },
@@ -78,23 +74,12 @@ export const apsRouter = router({
     console.log('updateProjects called')
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
-
-        /*
-        const hubid = await opt.ctx.prisma.hub.findFirst({})
-
-        const projects = await getProjectsList(
-          access_token || '',
-          hubid?.id || '',
-        ) // hubIdは適宜変更してください
-*/
+        const access_token = (await getApsAccessToken()) || ''
 
         const hubs = await opt.ctx.prisma.hub.findMany()
 
         for (const hub of hubs) {
-          const projects = await getProjectsList(access_token || '', hub.id)
+          const projects = await getProjectsList(access_token, hub.id)
           //          console.log(projects)
           for (const prj of projects) {
             const x = await opt.ctx.prisma.project.upsert({
@@ -136,10 +121,8 @@ export const apsRouter = router({
   updateHubsAndProjects: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
-        const hubsList = await getHubsList(access_token || '')
+        const access_token = (await getApsAccessToken()) || ''
+        const hubsList = await getHubsList(access_token)
 
         await opt.ctx.prisma.hub.deleteMany({})
 
@@ -206,15 +189,13 @@ export const apsRouter = router({
   getContentsFirstLevel: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
+        const access_token = (await getApsAccessToken()) || ''
 
         const projects = await opt.ctx.prisma.project.findMany()
 
         for (const project of projects) {
           const firstLevelEntries = await getProjectFirstLevel(
-            access_token || '',
+            access_token,
             project.hubId,
             project.id,
           )
@@ -300,15 +281,13 @@ export const apsRouter = router({
   getContentsAll: procedure.mutation(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
       try {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
+        const access_token = (await getApsAccessToken()) || ''
 
         const projects = await opt.ctx.prisma.project.findMany()
 
         for (const project of projects) {
           const firstLevelEntries = await getProjectAllLevel(
-            access_token || '',
+            access_token,
             project.hubId,
             project.id,
           )
@@ -383,10 +362,7 @@ export const apsRouter = router({
     )
     .mutation(async (opt) => {
       if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
-
+        const access_token = (await getApsAccessToken()) || ''
         const content = await opt.ctx.prisma.apsContent.findUnique({
           where: { id: opt.input.id },
         })
@@ -423,15 +399,13 @@ export const apsRouter = router({
     )
     .mutation(async (opt) => {
       if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
+        const access_token = (await getApsAccessToken()) || ''
 
         const content = await opt.ctx.prisma.apsContent.findUnique({
           where: { id: opt.input.id },
         })
         const result = await ensureViewableWithFallback(
-          access_token || '',
+          access_token,
           content?.urn || '',
         )
 
@@ -453,9 +427,7 @@ export const apsRouter = router({
     )
     .mutation(async (opt) => {
       if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
+        const access_token = (await getApsAccessToken()) || ''
 
         await opt.ctx.prisma.apsContent.deleteMany({
           where: { projectId: opt.input.projectId },
@@ -467,7 +439,7 @@ export const apsRouter = router({
           throw new Error('Project not found')
         }
         const contents = await getProjectAllLevel(
-          access_token || '',
+          access_token,
           project.hubId,
           project.id,
         )
@@ -664,10 +636,7 @@ export const apsRouter = router({
     )
     .mutation(async (opt) => {
       if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
-        const { token: access_token } = (await opt.ctx.prisma.token.findFirst({
-          where: { type: KEYNAME_APS_ACCESS_TOKEN },
-        })) || { token: '' }
-
+        const access_token = (await getApsAccessToken()) || ''
         const content = await opt.ctx.prisma.apsContent.findFirst({
           where: { id: opt.input.id },
         })
@@ -709,10 +678,8 @@ export const apsRouter = router({
    */
   getAccessToken: procedure.query(async (opt) => {
     if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAll)) {
-      const tokenEntry = await opt.ctx.prisma.token.findFirst({
-        where: { type: KEYNAME_APS_ACCESS_TOKEN },
-      })
-      return tokenEntry?.token || null
+      const token = await getApsAccessToken()
+      return token || null
     }
   }),
 })

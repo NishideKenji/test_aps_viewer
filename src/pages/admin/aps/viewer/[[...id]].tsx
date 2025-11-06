@@ -3,7 +3,6 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import React, { useMemo } from 'react'
 
-import { KEYNAME_APS_ACCESS_TOKEN } from '@/global_constants'
 import { trpc } from '@/utils/trpc'
 
 const ApsViewerDebug = dynamic(
