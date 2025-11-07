@@ -70,24 +70,6 @@ export async function getFolderContentsOnce(
   })
 }
 
-/**
- * 🔹「Projectの第一階層」= すべてのトップフォルダ直下の entries（folders/items）をフラットで取得
- */
-export async function getProjectFirstLevel(
-  token: string,
-  hubId: string,
-  projectId: string,
-): Promise<FirstLevelEntry[]> {
-  const tops = await getTopFolders(token, hubId, projectId)
-
-  const results: FirstLevelEntry[] = []
-  for (const t of tops) {
-    const entries = await getFolderContentsOnce(token, projectId, t.id)
-    results.push(...entries)
-  }
-  return results
-}
-
 export async function getAllFolderContents(
   token: string,
   projectId: string,

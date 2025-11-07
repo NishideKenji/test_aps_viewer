@@ -6,7 +6,6 @@ import { useSession } from 'next-auth/react'
 import { ApsContentTreeAdmin } from '@/components/admin/aps/apsContentTree'
 import { ApsSyncControlPanel } from '@/components/admin/aps/apsSyncControlPanel'
 import { ProjectListAdmin } from '@/components/admin/aps/projectlist'
-import { ControlPanelForUpdateTokenManually } from '@/components/admin/token/tokenupd'
 import { PermitedRoleListAll } from '@/global_constants'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 import { trpc } from '@/utils/trpc'
@@ -34,7 +33,8 @@ export default function ApsViewerPage() {
   const projectid = Array.isArray(id) ? id[0] : undefined
   const contentsid = Array.isArray(id) ? id[1] : undefined
 
-  const { data: projects } = trpc.apsRouter.projectlist.useQuery()
+  const { data: projects, refetch: refetchProjects } =
+    trpc.apsRouter.projectlist.useQuery()
 
   const { data: contents } = trpc.apsRouter.getContentListByProjectId.useQuery(
     { projectId: projectid || '' },
@@ -56,7 +56,19 @@ export default function ApsViewerPage() {
   const onDeleteHubsAndProjects =
     trpc.apsRouter.deleteHubsAndProjects.useMutation().mutateAsync
 
-  const onUpdateToken = trpc.tokenRouter.updateToken.useMutation().mutateAsync
+  const onDeleteContents =
+    trpc.apsRouter.deleteContents.useMutation().mutateAsync
+
+  const onUpdateAllHubsAndProjects = async () => {
+    await onUpdateHubsAndProjects()
+    await refetchProjects()
+  }
+
+  const onDeleteAllItems = async () => {
+    await onDeleteHubsAndProjects()
+    await onDeleteContents()
+    await refetchProjects()
+  }
 
   if (!checkIsAuthorized(session, PermitedRoleListAll)) {
     return <div style={{ padding: 8 }}>No session or not authorized</div>
@@ -76,12 +88,9 @@ export default function ApsViewerPage() {
             </>
           ) : (
             <>
-              <ControlPanelForUpdateTokenManually
-                onUpdateToken={onUpdateToken}
-              />
               <ApsSyncControlPanel
-                onUpdateHubsAndProjects={onUpdateHubsAndProjects}
-                onDeleteHubsAndProjects={onDeleteHubsAndProjects}
+                onUpdateAllHubsAndProjects={onUpdateAllHubsAndProjects}
+                onDeleteAllItems={onDeleteAllItems}
               />
               <Typography component="h4" variant="h6">
                 プロジェクト一覧
