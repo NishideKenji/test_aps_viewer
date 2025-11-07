@@ -9,6 +9,11 @@ import prisma from '@/server/prisma'
 
 import { refreshAccessToken } from './auth'
 
+/**
+ * 機能：APSアクセス用トークンを取得する
+ * トークンが期限切れ間近の場合は再取得を行う
+ * 返り値：APSアクセス用トークン文字列、もしくはnull
+ */
 export async function getApsAccessToken() {
   const token = await prisma.token.findUnique({
     where: { type: KEYNAME_APS_ACCESS_TOKEN },
@@ -35,42 +40,46 @@ export async function getApsAccessToken() {
   }
 }
 
+/**
+ * 機能：APSアクセス用トークンを更新する
+ * 返り値：なし
+ * */
 export async function updateAccessToken() {
-  try {
-    const { token: refreshToken } = (await prisma.token.findFirst({
-      where: { type: KEYNAME_APS_REFRESH_TOKEN },
-    })) || { refreshToken: '' }
-    const { token: client_id } = (await prisma.token.findFirst({
-      where: { type: KEYNAME_APS_CLIENT_ID },
-    })) || { client_id: '' }
-    const { token: client_secret } = (await prisma.token.findFirst({
-      where: { type: KEYNAME_APS_CLIENT_SECRET },
-    })) || { client_secret: '' }
-    const token = await refreshAccessToken(
-      refreshToken || '',
-      client_id || '',
-      client_secret || '',
-    )
+  //try {
+  const { token: refreshToken } = (await prisma.token.findFirst({
+    where: { type: KEYNAME_APS_REFRESH_TOKEN },
+  })) || { refreshToken: '' }
+  const { token: client_id } = (await prisma.token.findFirst({
+    where: { type: KEYNAME_APS_CLIENT_ID },
+  })) || { client_id: '' }
+  const { token: client_secret } = (await prisma.token.findFirst({
+    where: { type: KEYNAME_APS_CLIENT_SECRET },
+  })) || { client_secret: '' }
+  const token = await refreshAccessToken(
+    refreshToken || '',
+    client_id || '',
+    client_secret || '',
+  )
 
-    await prisma.token.upsert({
-      where: { type: KEYNAME_APS_ACCESS_TOKEN },
-      create: {
-        type: KEYNAME_APS_ACCESS_TOKEN,
-        token: token.access_token,
-        expiresIn: token.expires_in,
-      },
-      update: {
-        token: token.access_token,
-        expiresIn: token.expires_in,
-      },
-    })
+  await prisma.token.upsert({
+    where: { type: KEYNAME_APS_ACCESS_TOKEN },
+    create: {
+      type: KEYNAME_APS_ACCESS_TOKEN,
+      token: token.access_token,
+      expiresIn: token.expires_in,
+    },
+    update: {
+      token: token.access_token,
+      expiresIn: token.expires_in,
+    },
+  })
 
-    await prisma.token.upsert({
-      where: { type: KEYNAME_APS_REFRESH_TOKEN },
-      create: { type: KEYNAME_APS_REFRESH_TOKEN, token: token.refresh_token },
-      update: { token: token.refresh_token },
-    })
-  } catch (e) {
-    console.log(e)
-  }
+  await prisma.token.upsert({
+    where: { type: KEYNAME_APS_REFRESH_TOKEN },
+    create: { type: KEYNAME_APS_REFRESH_TOKEN, token: token.refresh_token },
+    update: { token: token.refresh_token },
+  })
+  //} catch (e) {
+  //  console.log(e)
+  //}
 }
