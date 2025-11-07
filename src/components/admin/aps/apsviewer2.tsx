@@ -1,4 +1,3 @@
-// components/ApsViewerDebug.tsx
 import { useEffect, useRef, useState } from 'react'
 
 type Props = {
@@ -23,7 +22,7 @@ type Status =
   | 'shown'
   | 'error'
 
-export default function ApsViewerDebug({
+export default function ApsViewer({
   urn,
   accessToken,
   tokenExpiresInSeconds = 3000,

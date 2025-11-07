@@ -9,12 +9,9 @@ import { PermitedRoleListAll } from '@/global_constants'
 import { checkIsAuthorized } from '@/utils/common/checkIsAuthorized'
 import { trpc } from '@/utils/trpc'
 
-const ApsViewerDebug = dynamic(
-  () => import('@/components/admin/aps/apsviewer2'),
-  {
-    ssr: false,
-  },
-)
+const ApsViewer = dynamic(() => import('@/components/admin/aps/apsviewer2'), {
+  ssr: false,
+})
 
 export default function ApsViewerPage() {
   const basePath = ''
@@ -74,7 +71,7 @@ export default function ApsViewerPage() {
             style={{ width: '100%', height: '80vh', border: '1px dashed #E0A' }}
           >
             {content && content.urn && accessToken && (
-              <ApsViewerDebug
+              <ApsViewer
                 urn={content.urn} // ← ここが常に値ありになる
                 accessToken={accessToken} // viewables:read 必須
                 prefer="auto"
