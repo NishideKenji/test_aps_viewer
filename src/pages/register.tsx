@@ -108,7 +108,7 @@ export default function RegisterForm() {
           {formState.isSubmitted && !formState.isSubmitSuccessful && (
             <Alert severity="error">{formState.errors.root?.message}</Alert>
           )}
-          {true && (
+          {false && (
             //状態を表示したいときはここをtrueにする
             <>
               <br />
