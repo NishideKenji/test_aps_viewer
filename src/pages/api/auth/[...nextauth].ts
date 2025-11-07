@@ -9,23 +9,23 @@ export const nextAuthOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       // サインインフォームに表示する名前 (例: "Sign in with...")
-      name: 'Credentials POC',
+      name: 'Credentials',
       // 認証情報は、サインインページに適切なフォームを生成するために使用されます。
       // 送信されることを期待するフィールドを何でも指定することができます。
       // 例: ドメイン、ユーザー名、パスワード、2FAトークンなど。
       // オブジェクトを通して、任意の HTML 属性を <input> タグに渡すことができます。
       credentials: {
-        username: {
-          label: 'ユーザー名',
+        email: {
+          label: 'メールアドレス',
           type: 'text',
-          placeholder: 'ユーザー名',
+          placeholder: 'メールアドレスを入力してください',
         },
         password: { label: 'パスワード', type: 'password' },
       },
       //@ts-ignore
       async authorize(credentials, req) {
         //@ts-ignore
-        const { username, password } = credentials
+        const { email, password } = credentials
 
         // ここにロジックを追加して、提供されたクレデンシャルからユーザーを検索します。
         let user: any = null
@@ -34,7 +34,7 @@ export const nextAuthOptions: NextAuthOptions = {
           where: {
             AND: {
               email: {
-                contains: username,
+                contains: email,
               },
             },
           },
