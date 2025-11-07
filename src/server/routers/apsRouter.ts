@@ -101,7 +101,7 @@ export const apsRouter = router({
           where: { id: opt.input.id },
         })
         const itemInfo = await getViewerInfo(
-          access_token || '',
+          access_token,
           content?.projectId || '',
           opt.input.id,
         )
