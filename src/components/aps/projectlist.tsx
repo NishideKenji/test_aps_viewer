@@ -29,11 +29,11 @@ export const ProjectList = ({ projects }: Props) => {
         {projects.map((project, index) => {
           return (
             <TableRow key={index}>
-              <TableCell>
-                <Link href={`/${project.id}`}>{index + 1}</Link>
-              </TableCell>
+              <TableCell>{index + 1}</TableCell>
               <TableCell>{project.hubName}</TableCell>
-              <TableCell>{project.name}</TableCell>
+              <TableCell>
+                <Link href={`/${project.id}`}>{project.name}</Link>
+              </TableCell>
               <TableCell>
                 {dayjs(project.updatedAt).format('YYYY/MM/DD HH:mm')}
               </TableCell>

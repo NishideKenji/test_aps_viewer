@@ -44,7 +44,7 @@ export const ProjectListAdmin = ({ projects }: Props) => {
           <TableCell>Hub</TableCell>
           <TableCell>Project</TableCell>
           <TableCell>Updated</TableCell>
-          <TableCell>UPD</TableCell>
+          <TableCell>APSと同期</TableCell>
         </TableRow>
       </TableHead>
 
@@ -52,13 +52,13 @@ export const ProjectListAdmin = ({ projects }: Props) => {
         {projects.map((project, index) => {
           return (
             <TableRow key={index}>
+              <TableCell>{index + 1}</TableCell>
+              <TableCell>{project.hubName}</TableCell>
               <TableCell>
                 <Link href={`${currentPath.replace(/\/$/, '')}/${project.id}`}>
-                  {index + 1}
+                  {project.name}
                 </Link>
               </TableCell>
-              <TableCell>{project.hubName}</TableCell>
-              <TableCell>{project.name}</TableCell>
               <TableCell>
                 {dayjs(project.updatedAt).format('YYYY/MM/DD HH:mm')}
               </TableCell>
@@ -87,7 +87,7 @@ export const ProjectListAdmin = ({ projects }: Props) => {
                     }
                   }}
                 >
-                  {isSubmitting ? 'Processing' : 'Update'}
+                  {isSubmitting ? 'Processing' : 'Sync'}
                 </Button>
               </TableCell>
             </TableRow>

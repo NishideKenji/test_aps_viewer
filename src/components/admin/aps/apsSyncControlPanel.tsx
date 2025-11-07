@@ -24,7 +24,7 @@ export const ApsSyncControlPanel: FC<ApsSyncControlPanelProps> = ({
     <>
       <Paper variant="outlined" sx={{ p: 2, background: 'light' }}>
         <Typography component="h4" variant="h6">
-          APS Hub / Project 更新
+          APS Hub / Project 同期
         </Typography>
 
         <Button
@@ -49,7 +49,7 @@ export const ApsSyncControlPanel: FC<ApsSyncControlPanelProps> = ({
             }
           }}
         >
-          {isSubmitting ? 'Processing' : 'Update'}
+          {isSubmitting ? 'Processing' : 'Sync'}
         </Button>
       </Paper>
 
