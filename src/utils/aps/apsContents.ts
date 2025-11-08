@@ -75,6 +75,9 @@ export async function getFirstChildContents(
   })
 }
 
+// 以下の、一括処理については、使用しなくなるのでいったんコメントアウト
+// 将来、バッチ処理の見直しにより復活の可能性があるため、コメントアウトで残す
+/**
 export async function getAllFolderContents(
   token: string,
   projectId: string,
@@ -104,10 +107,11 @@ export async function getAllFolderContents(
 
   return results
 }
-
+*/
 /**
  * 🔹「Projectの第一階層」= すべてのトップフォルダ直下の entries（folders/items）をフラットで取得
  */
+/*
 export async function getProjectAllLevel(
   token: string,
   hubId: string,
@@ -122,3 +126,4 @@ export async function getProjectAllLevel(
   }
   return results
 }
+*/

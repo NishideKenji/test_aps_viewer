@@ -4,7 +4,6 @@ import { PermitedRoleListAdmin, PermitedRoleListAll } from '@/global_constants'
 import type { ContentsIndexElement } from '@/utils/aps/apsContents'
 import {
   getFirstChildContents,
-  getProjectAllLevel,
   getTopLevelContents,
 } from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
@@ -158,6 +157,8 @@ export const apsRouter = router({
    * @param opt
    * @return {Promise<void>}
    */
+  /*
+  // 全階層一括取得機能はいったん使用しないためコメントアウト(バッチ処理の見直しで将来復活の可能性あり)
   syncContentsStructureByProjectID: procedure
     .input(
       z.object({
@@ -196,6 +197,7 @@ export const apsRouter = router({
         //        console.log(contents)
       }
     }),
+    */
 
   /**
    * プロジェクトIDに基づいてAPSプロジェクトのトップレベル情報を取得する
@@ -224,7 +226,9 @@ export const apsRouter = router({
           project.hubId,
           project.id,
         )
-        console.log('Top level contents:', topLevelContents)
+
+        //console.log('Top level contents:', topLevelContents)
+
         const ans: ContentsIndexElement[] = []
         for (const topLevelContent of topLevelContents) {
           const contents = await getFirstChildContents(
@@ -232,7 +236,9 @@ export const apsRouter = router({
             project.id,
             topLevelContent.id,
           )
-          console.log('First child contents:', contents)
+
+          //console.log('First child contents:', contents)
+
           ans.push(...contents)
           // DBに保存
           for (const content of contents) {

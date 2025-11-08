@@ -34,9 +34,6 @@ export const ProjectListAdmin = ({ projects }: Props) => {
 
   const { enqueueSnackbar } = useSnackbar()
 
-  const onGetContentsStructureByProjectID =
-    trpc.apsRouter.syncContentsStructureByProjectID.useMutation().mutateAsync
-
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // APS Contents のトップレベルを同期するためのルーター
