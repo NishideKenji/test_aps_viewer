@@ -1,5 +1,5 @@
 // utils/aps/firstLevel.ts
-export type FirstLevelEntry = {
+export type ContentsIndexElement = {
   id: string
   name: string
   kind: 'folder' | 'item'
@@ -7,9 +7,9 @@ export type FirstLevelEntry = {
 }
 
 /**
- * Project の「トップフォルダ」を取得
+ * Project の「トップレベルコンテンツ」を取得
  */
-export async function getTopFolders(
+export async function getTopLevelContents(
   token: string,
   hubId: string,
   projectId: string,
@@ -23,22 +23,27 @@ export async function getTopFolders(
   )
   if (!r.ok) throw new Error(`APS ${r.status}: ${await r.text()}`)
   const json = await r.json()
+
+  //console.log('Top level contents response:', json)
+
   // 通常1件（designs）が返りますが、配列で扱います
-  return (json.data ?? []).map((f: any) => ({
-    id: f.id, // 例: urn:adsk.wipprod:fs.folder:co.xxxxx
-    name: f.attributes?.name ?? 'Top',
-  }))
+  const ans: { id: string; name: string }[] = (json.data ?? []).map(
+    (f: any) => ({
+      id: f.id, // 例: urn:adsk.wipprod:fs.folder:co.xxxxx
+      name: f.attributes?.name ?? 'Top',
+    }),
+  )
+  return ans
 }
 
 /**
- * 指定フォルダ直下（1階層）だけの中身を取得（folders + items）
- * ※ ページングが必要な場合は links.next を辿る処理を追加してください
+ * 🔹 フォルダ直下の contents（folders/items）を取得
  */
-export async function getFolderContentsOnce(
+export async function getFirstChildContents(
   token: string,
   projectId: string,
   folderId: string,
-): Promise<FirstLevelEntry[]> {
+): Promise<ContentsIndexElement[]> {
   const r = await fetch(
     `https://developer.api.autodesk.com/data/v1/projects/${projectId}/folders/${encodeURIComponent(
       folderId,
@@ -75,11 +80,11 @@ export async function getAllFolderContents(
   projectId: string,
   folderId: string,
   parentId: string | null = null,
-): Promise<FirstLevelEntry[]> {
+): Promise<ContentsIndexElement[]> {
   // まず現在フォルダの直下を取得
-  const entries = await getFolderContentsOnce(token, projectId, folderId)
+  const entries = await getFirstChildContents(token, projectId, folderId)
 
-  const results: FirstLevelEntry[] = []
+  const results: ContentsIndexElement[] = []
 
   for (const e of entries) {
     results.push(e) // 今の階層を追加
@@ -107,10 +112,10 @@ export async function getProjectAllLevel(
   token: string,
   hubId: string,
   projectId: string,
-): Promise<FirstLevelEntry[]> {
-  const tops = await getTopFolders(token, hubId, projectId)
+): Promise<ContentsIndexElement[]> {
+  const tops = await getTopLevelContents(token, hubId, projectId)
 
-  const results: FirstLevelEntry[] = []
+  const results: ContentsIndexElement[] = []
   for (const t of tops) {
     const entries = await getAllFolderContents(token, projectId, t.id)
     results.push(...entries)
