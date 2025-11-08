@@ -1,7 +1,11 @@
 import { z } from 'zod'
 
 import { PermitedRoleListAdmin, PermitedRoleListAll } from '@/global_constants'
-import { getProjectAllLevel } from '@/utils/aps/apsContents'
+import type { ContentsIndexElement } from '@/utils/aps/apsContents'
+import {
+  getFirstChildContents,
+  getTopLevelContents,
+} from '@/utils/aps/apsContents'
 import { getHubsList, getProjectsList } from '@/utils/aps/apssync'
 import { ensureViewableWithFallback } from '@/utils/aps/ensureSvf2'
 import { getApsAccessToken } from '@/utils/aps/getapsaccesstoken'
@@ -153,6 +157,8 @@ export const apsRouter = router({
    * @param opt
    * @return {Promise<void>}
    */
+  /*
+  // 全階層一括取得機能はいったん使用しないためコメントアウト(バッチ処理の見直しで将来復活の可能性あり)
   syncContentsStructureByProjectID: procedure
     .input(
       z.object({
@@ -189,6 +195,112 @@ export const apsRouter = router({
           })
         }
         //        console.log(contents)
+      }
+    }),
+    */
+
+  /**
+   * プロジェクトIDに基づいてAPSプロジェクトのトップレベル情報を取得する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
+  syncTopLevelContentsByProjectID: procedure
+    .input(
+      z.object({
+        projectId: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const access_token = (await getApsAccessToken()) || ''
+
+        const project = await opt.ctx.prisma.project.findUnique({
+          where: { id: opt.input.projectId },
+        })
+        if (!project) {
+          throw new Error('Project not found')
+        }
+        const topLevelContents = await getTopLevelContents(
+          access_token,
+          project.hubId,
+          project.id,
+        )
+
+        //console.log('Top level contents:', topLevelContents)
+
+        const ans: ContentsIndexElement[] = []
+        for (const topLevelContent of topLevelContents) {
+          const contents = await getFirstChildContents(
+            access_token,
+            project.id,
+            topLevelContent.id,
+          )
+
+          //console.log('First child contents:', contents)
+
+          ans.push(...contents)
+          // DBに保存
+          for (const content of contents) {
+            await opt.ctx.prisma.apsContent.create({
+              data: {
+                id: content.id,
+                name: content.name,
+                kind: content.kind,
+                parentId: content.parentId,
+                projectId: project.id,
+              },
+            })
+          }
+        }
+        return ans
+      }
+    }),
+
+  /**
+   * コンテンツIDに基づいてそのコンテンツを親に持つAPSコンテンツ情報（第一階層）を同期する
+   * 管理者権限を持つユーザーのみアクセス可能
+   * @param opt
+   * @return {Promise<void>}
+   */
+  syncChildContentsByParentContentID: procedure
+    .input(
+      z.object({
+        parentId: z.string(),
+      }),
+    )
+    .mutation(async (opt) => {
+      if (checkIsAuthorized(opt.ctx.session, PermitedRoleListAdmin)) {
+        const access_token = (await getApsAccessToken()) || ''
+
+        // 親コンテンツ情報を取得
+        const parentContent = await opt.ctx.prisma.apsContent.findUnique({
+          where: { id: opt.input.parentId },
+        })
+        if (!parentContent) {
+          throw new Error('Parent content not found')
+        }
+        const contents = await getFirstChildContents(
+          access_token,
+          parentContent.projectId,
+          parentContent.id,
+        )
+        console.log('1st level child contents:', contents)
+        // DBに保存
+
+        for (const content of contents) {
+          await opt.ctx.prisma.apsContent.create({
+            data: {
+              id: content.id,
+              name: content.name,
+              kind: content.kind,
+              parentId: content.parentId,
+              projectId: parentContent.projectId,
+            },
+          })
+        }
+
+        return contents
       }
     }),
 
